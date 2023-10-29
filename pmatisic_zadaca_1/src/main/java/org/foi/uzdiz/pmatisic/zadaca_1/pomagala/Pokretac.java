@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.foi.uzdiz.pmatisic.zadaca_1.singleton.Tvrtka;
 
 public class Pokretac {
 
@@ -27,7 +28,7 @@ public class Pokretac {
       return;
     }
 
-    // Tvrtka t = new Tvrtka(podatci);
+    Tvrtka.getInstance(podatci);
   }
 
   private Matcher provjeriArgumente(String s) {
