@@ -6,10 +6,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.foi.uzdiz.pmatisic.zadaca_1.singleton.Tvrtka;
 
-public class Pokretac {
+public class Main {
 
   public static void main(String[] args) {
-    Pokretac p = new Pokretac();
+    Main p = new Main();
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < args.length; i++) {
       sb.append(args[i]).append(" ");
