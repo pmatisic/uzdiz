@@ -12,6 +12,7 @@ import org.foi.uzdiz.pmatisic.zadaca_1.pomagala.Greske;
 public class VrstePaketaDatoteka implements Datoteka {
 
   private String putanjaDatoteke;
+  List<VrstaPaketa> vrste = new ArrayList<>();
 
   @Override
   public void postaviPutanju(String putanja) {
@@ -28,7 +29,7 @@ public class VrstePaketaDatoteka implements Datoteka {
       }
 
       var linije = Files.readAllLines(staza, Charset.forName("UTF-8"));
-      List<VrstaPaketa> vrste = new ArrayList<>();
+      vrste.clear();
 
       for (String linija : linije) {
         String[] dijelovi = linija.split(";");
@@ -39,11 +40,11 @@ public class VrstePaketaDatoteka implements Datoteka {
         }
 
         try {
-          VrstaPaketa vrstaPaketa = new VrstaPaketa(dijelovi[0], dijelovi[1], Double.parseDouble(dijelovi[2]),
-              Double.parseDouble(dijelovi[3]), Double.parseDouble(dijelovi[4]),
-              Double.parseDouble(dijelovi[5]), Double.parseDouble(dijelovi[6]),
-              Double.parseDouble(dijelovi[7]), Double.parseDouble(dijelovi[8]),
-              Double.parseDouble(dijelovi[9]));
+          VrstaPaketa vrstaPaketa = new VrstaPaketa(dijelovi[0], dijelovi[1],
+              Double.parseDouble(dijelovi[2]), Double.parseDouble(dijelovi[3]),
+              Double.parseDouble(dijelovi[4]), Double.parseDouble(dijelovi[5]),
+              Double.parseDouble(dijelovi[6]), Double.parseDouble(dijelovi[7]),
+              Double.parseDouble(dijelovi[8]), Double.parseDouble(dijelovi[9]));
           vrste.add(vrstaPaketa);
         } catch (Exception e) {
           Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija,
@@ -53,6 +54,12 @@ public class VrstePaketaDatoteka implements Datoteka {
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  @Override
+  public List<Object> dohvatiPodatke() {
+    List<Object> rezultat = new ArrayList<>(vrste);
+    return rezultat;
   }
 
 }

@@ -1,9 +1,13 @@
 package org.foi.uzdiz.pmatisic.zadaca_1.pomagala;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.foi.uzdiz.pmatisic.zadaca_1.factory.Datoteka;
+import org.foi.uzdiz.pmatisic.zadaca_1.factory.DatotekaFactory;
+import org.foi.uzdiz.pmatisic.zadaca_1.model.Vozilo;
 import org.foi.uzdiz.pmatisic.zadaca_1.singleton.Tvrtka;
 
 public class Main {
@@ -29,6 +33,13 @@ public class Main {
     }
 
     Tvrtka.getInstance(podatci);
+    Datoteka datotekaVozila = DatotekaFactory.stvoriDatoteku("pv", podatci);
+    datotekaVozila.citajPodatke();
+    List<Object> popisVozila = datotekaVozila.dohvatiPodatke();
+    for (Object obj : popisVozila) {
+      Vozilo vozilo = (Vozilo) obj;
+      System.out.println(vozilo);
+    }
   }
 
   private Matcher provjeriArgumente(String s) {

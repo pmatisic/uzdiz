@@ -12,6 +12,7 @@ import org.foi.uzdiz.pmatisic.zadaca_1.pomagala.Greske;
 public class VoziloDatoteka implements Datoteka {
 
   private String putanjaDatoteke;
+  private List<Vozilo> vozila = new ArrayList<>();
 
   @Override
   public void postaviPutanju(String putanja) {
@@ -28,7 +29,7 @@ public class VoziloDatoteka implements Datoteka {
       }
 
       var linije = Files.readAllLines(staza, Charset.forName("UTF-8"));
-      List<Vozilo> vozila = new ArrayList<>();
+      vozila.clear();
 
       for (String linija : linije) {
         String[] dijelovi = linija.split(";");
@@ -39,17 +40,27 @@ public class VoziloDatoteka implements Datoteka {
         }
 
         try {
-          Vozilo vozilo = new Vozilo(dijelovi[0], dijelovi[1], Double.parseDouble(dijelovi[2]),
-              Double.parseDouble(dijelovi[3]), Integer.parseInt(dijelovi[4]));
+          Vozilo vozilo = new Vozilo(
+              dijelovi[0],
+              dijelovi[1],
+              Double.parseDouble(dijelovi[2].replace(',', '.')),
+              Double.parseDouble(dijelovi[3].replace(',', '.')),
+              Integer.parseInt(dijelovi[4]));
           vozila.add(vozilo);
         } catch (Exception e) {
           Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija,
-              "Greška prilikom obrade retka");
+              "Greška prilikom obrade retka: " + e.getMessage());
         }
       }
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  @Override
+  public List<Object> dohvatiPodatke() {
+    List<Object> rezultat = new ArrayList<>(vozila);
+    return rezultat;
   }
 
 }
