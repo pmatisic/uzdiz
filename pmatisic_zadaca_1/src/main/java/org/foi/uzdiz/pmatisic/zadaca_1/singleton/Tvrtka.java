@@ -34,4 +34,8 @@ public class Tvrtka {
     return podatci;
   }
 
+  public void uredPrijem() {}
+
+  public void uredDostava() {}
+
 }

@@ -7,13 +7,13 @@ public class DatotekaFactory {
     Datoteka datoteka;
     switch (kljuc) {
       case "vp":
-        datoteka = new VrsteDatoteka();
+        datoteka = new VrstePaketaDatoteka();
         break;
       case "pv":
-        datoteka = new VozilaDatoteka();
+        datoteka = new VoziloDatoteka();
         break;
       case "pp":
-        datoteka = new PaketiDatoteka();
+        datoteka = new PrijemPaketaDatoteka();
         break;
       default:
         throw new IllegalArgumentException("Neispravan ključ za datoteku: " + kljuc);

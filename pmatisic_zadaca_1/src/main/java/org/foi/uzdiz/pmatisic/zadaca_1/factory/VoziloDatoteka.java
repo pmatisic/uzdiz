@@ -9,7 +9,7 @@ import java.util.List;
 import org.foi.uzdiz.pmatisic.zadaca_1.model.Vozilo;
 import org.foi.uzdiz.pmatisic.zadaca_1.pomagala.Greske;
 
-public class VozilaDatoteka implements Datoteka {
+public class VoziloDatoteka implements Datoteka {
 
   private String putanjaDatoteke;
 
