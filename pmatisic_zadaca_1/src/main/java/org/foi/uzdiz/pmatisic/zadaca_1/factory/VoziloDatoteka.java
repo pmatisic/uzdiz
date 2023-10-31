@@ -20,6 +20,11 @@ public class VoziloDatoteka implements Datoteka {
   }
 
   @Override
+  public List<Object> dohvatiPodatke() {
+    return new ArrayList<>(vozila);
+  }
+
+  @Override
   public void citajPodatke() {
     try {
       Path staza = Path.of(putanjaDatoteke);
@@ -28,8 +33,12 @@ public class VoziloDatoteka implements Datoteka {
         throw new IOException("Datoteka '" + putanjaDatoteke + "' ne postoji ili nije čitljiva!");
       }
 
-      var linije = Files.readAllLines(staza, Charset.forName("UTF-8"));
+      List<String> linije = Files.readAllLines(staza, Charset.forName("UTF-8"));
       vozila.clear();
+
+      if (!linije.isEmpty() && linije.get(0).startsWith("Registracija")) {
+        linije.remove(0);
+      }
 
       for (String linija : linije) {
         String[] dijelovi = linija.split(";");
@@ -40,27 +49,24 @@ public class VoziloDatoteka implements Datoteka {
         }
 
         try {
-          Vozilo vozilo = new Vozilo(
-              dijelovi[0],
-              dijelovi[1],
-              Double.parseDouble(dijelovi[2].replace(',', '.')),
-              Double.parseDouble(dijelovi[3].replace(',', '.')),
-              Integer.parseInt(dijelovi[4]));
+          double kapacitetTezine = Double.parseDouble(dijelovi[2].replace(',', '.'));
+          double kapacitetProstora = Double.parseDouble(dijelovi[3].replace(',', '.'));
+          int redoslijed = Integer.parseInt(dijelovi[4]);
+
+          Vozilo vozilo =
+              new Vozilo(dijelovi[0], dijelovi[1], kapacitetTezine, kapacitetProstora, redoslijed);
           vozila.add(vozilo);
+        } catch (NumberFormatException e) {
+          Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija,
+              "Greška prilikom konverzije broja: " + e.getMessage());
         } catch (Exception e) {
           Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija,
-              "Greška prilikom obrade retka: " + e.getMessage());
+              "Opća greška prilikom obrade retka: " + e.getMessage());
         }
       }
     } catch (IOException e) {
       e.printStackTrace();
     }
-  }
-
-  @Override
-  public List<Object> dohvatiPodatke() {
-    List<Object> rezultat = new ArrayList<>(vozila);
-    return rezultat;
   }
 
 }

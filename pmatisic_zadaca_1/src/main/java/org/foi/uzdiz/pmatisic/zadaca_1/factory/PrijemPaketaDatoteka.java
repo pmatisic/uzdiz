@@ -13,11 +13,16 @@ import org.foi.uzdiz.pmatisic.zadaca_1.pomagala.Greske;
 public class PrijemPaketaDatoteka implements Datoteka {
 
   private String putanjaDatoteke;
-  List<PrijemPaketa> paketi = new ArrayList<>();
+  private List<PrijemPaketa> paketi = new ArrayList<>();
 
   @Override
   public void postaviPutanju(String putanja) {
     this.putanjaDatoteke = putanja;
+  }
+
+  @Override
+  public List<Object> dohvatiPodatke() {
+    return new ArrayList<>(paketi);
   }
 
   @Override
@@ -29,8 +34,12 @@ public class PrijemPaketaDatoteka implements Datoteka {
         throw new IOException("Datoteka '" + putanjaDatoteke + "' ne postoji ili nije čitljiva!");
       }
 
-      var linije = Files.readAllLines(staza, Charset.forName("UTF-8"));
+      List<String> linije = Files.readAllLines(staza, Charset.forName("UTF-8"));
       paketi.clear();
+
+      if (!linije.isEmpty() && linije.get(0).startsWith("Oznaka")) {
+        linije.remove(0);
+      }
 
       for (String linija : linije) {
         String[] dijelovi = linija.split(";");
@@ -41,26 +50,51 @@ public class PrijemPaketaDatoteka implements Datoteka {
         }
 
         try {
+          if (!"A".equalsIgnoreCase(dijelovi[4]) && !"B".equalsIgnoreCase(dijelovi[4])
+              && !"C".equalsIgnoreCase(dijelovi[4]) && !"D".equalsIgnoreCase(dijelovi[4])
+              && !"E".equalsIgnoreCase(dijelovi[4]) && !"X".equalsIgnoreCase(dijelovi[4])) {
+            Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija,
+                "Nepoznata vrsta paketa!");
+            continue;
+          }
+
+          if (("A".equalsIgnoreCase(dijelovi[4]) || "B".equalsIgnoreCase(dijelovi[4])
+              || "C".equalsIgnoreCase(dijelovi[4]) || "D".equalsIgnoreCase(dijelovi[4])
+              || "E".equalsIgnoreCase(dijelovi[4]))
+              && (Double.parseDouble(dijelovi[5].replace(',', '.')) != 0
+                  || Double.parseDouble(dijelovi[6].replace(',', '.')) != 0
+                  || Double.parseDouble(dijelovi[7].replace(',', '.')) != 0)) {
+            Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija,
+                "Tipski paket mora imati visinu, širinu i dužinu postavljenu na 0!");
+            continue;
+          }
+
+          if (!"P".equalsIgnoreCase(dijelovi[9])
+              && Double.parseDouble(dijelovi[10].replace(',', '.')) != 0) {
+            Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija,
+                "Ako usluga nije plaćanje pouzećem, iznos pouzeća mora biti 0!");
+            continue;
+          }
+
           PrijemPaketa prijemPaketa = new PrijemPaketa(dijelovi[0],
               PrijemPaketa.konvertirajVrijeme(dijelovi[1]), dijelovi[2], dijelovi[3], dijelovi[4],
-              Double.parseDouble(dijelovi[5]), Double.parseDouble(dijelovi[6]),
-              Double.parseDouble(dijelovi[7]), Double.parseDouble(dijelovi[8]),
-              UslugaDostave.valueOf(dijelovi[9]), Double.parseDouble(dijelovi[10]));
+              Double.parseDouble(dijelovi[5].replace(',', '.')),
+              Double.parseDouble(dijelovi[6].replace(',', '.')),
+              Double.parseDouble(dijelovi[7].replace(',', '.')),
+              Double.parseDouble(dijelovi[8].replace(',', '.')), UslugaDostave.valueOf(dijelovi[9]),
+              Double.parseDouble(dijelovi[10].replace(',', '.')));
           paketi.add(prijemPaketa);
+        } catch (NumberFormatException e) {
+          Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija,
+              "Greška prilikom konverzije broja: " + e.getMessage());
         } catch (Exception e) {
           Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija,
-              "Greška prilikom obrade retka");
+              "Opća greška prilikom obrade retka: " + e.getMessage());
         }
       }
     } catch (IOException e) {
       e.printStackTrace();
     }
-  }
-
-  @Override
-  public List<Object> dohvatiPodatke() {
-    List<Object> rezultat = new ArrayList<>(paketi);
-    return rezultat;
   }
 
 }
