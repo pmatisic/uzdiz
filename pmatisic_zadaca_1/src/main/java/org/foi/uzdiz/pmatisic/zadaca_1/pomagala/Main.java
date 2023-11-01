@@ -2,9 +2,11 @@ package org.foi.uzdiz.pmatisic.zadaca_1.pomagala;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.foi.uzdiz.pmatisic.zadaca_1.singleton.Tvrtka;
+import org.foi.uzdiz.pmatisic.zadaca_1.singleton.VirtualniSat;
 
 public class Main {
 
@@ -29,13 +31,27 @@ public class Main {
     }
 
     Tvrtka.getInstance(podatci);
-    // Datoteka datoteka = DatotekaFactory.stvoriDatoteku("pp", podatci);
-    // datoteka.citajPodatke();
-    // List<Object> popis = datoteka.dohvatiPodatke();
-    // for (Object obj : popis) {
-    // PrijemPaketa a = (PrijemPaketa) obj;
-    // System.out.println(a);
-    // }
+    String pocetnoVrijeme = podatci.get("vs");
+    int mnoziteljSekunde = Integer.parseInt(podatci.get("ms"));
+    VirtualniSat virtualniSat = VirtualniSat.getInstance(pocetnoVrijeme, mnoziteljSekunde);
+
+
+    Scanner scanner = new Scanner(System.in);
+    String unos;
+    do {
+      System.out.println("Unesite komandu:");
+      unos = scanner.nextLine();
+
+      if (unos.equals("IP")) {
+        pregledStatusaPaketa();
+      } else if (unos.startsWith("VR ")) {
+        izvrsavanjePrograma(unos);
+      } else {
+        System.out.println("Pogrešan unos!");
+      }
+    } while (!unos.equals("Q"));
+    scanner.close();
+    System.out.println("Program je završen.");
   }
 
   private Matcher provjeriArgumente(String s) {
@@ -61,6 +77,10 @@ public class Main {
     grupe.put("pr", m.group("pr"));
     grupe.put("kr", m.group("kr"));
     return grupe;
+  }
+
+  public String getVirtualnoVrijeme() {
+    return virtualniSat.dohvatiTrenutnoVrijeme();
   }
 
 }

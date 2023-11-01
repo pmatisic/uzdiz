@@ -1,11 +1,16 @@
 package org.foi.uzdiz.pmatisic.zadaca_1.singleton;
 
 import java.util.Map;
+import org.foi.uzdiz.pmatisic.zadaca_1.pomagala.UredZaDostavu;
+import org.foi.uzdiz.pmatisic.zadaca_1.pomagala.UredZaPrijem;
 
 public class Tvrtka {
 
   private Map<String, String> podatci;
   private static volatile Tvrtka instance;
+  private UredZaPrijem uredZaPrijem;
+  private UredZaDostavu uredZaDostavu;
+  private VirtualniSat virtualniSat;
 
   private Tvrtka(Map<String, String> podatci) {
     this.podatci = podatci;
@@ -34,8 +39,16 @@ public class Tvrtka {
     return podatci;
   }
 
-  public void uredPrijem() {}
+  public UredZaPrijem getUredZaPrijem() {
+    return uredZaPrijem;
+  }
 
-  public void uredDostava() {}
+  public UredZaDostavu getUredZaDostavu() {
+    return uredZaDostavu;
+  }
+
+  public String getVirtualnoVrijeme() {
+    return virtualniSat.dohvatiTrenutnoVrijeme();
+  }
 
 }

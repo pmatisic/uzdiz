@@ -1,17 +1,21 @@
 package org.foi.uzdiz.pmatisic.zadaca_1.builder;
 
+import java.time.LocalDateTime;
+import org.foi.uzdiz.pmatisic.zadaca_1.model.UslugaDostave;
+
 public class PaketBuilder implements Builder {
 
   private String oznaka;
-  private String opis;
+  private LocalDateTime vrijemePrijema;
+  private String posiljatelj;
+  private String primatelj;
+  private String vrstaPaketa;
   private double visina;
   private double sirina;
   private double duzina;
-  private double maksimalnaTezina;
-  private double cijena;
-  private double cijenaHitno;
-  private double cijenaP;
-  private double cijenaT;
+  private double tezina;
+  private UslugaDostave uslugaDostave;
+  private double iznosPouzeca;
 
   @Override
   public PaketBuilder oznaka(String oznaka) {
@@ -20,62 +24,59 @@ public class PaketBuilder implements Builder {
   }
 
   @Override
-  public PaketBuilder opis(String opis) {
-    this.opis = opis;
+  public PaketBuilder vrijemePrijema(LocalDateTime vrijemePrijema) {
+    this.vrijemePrijema = vrijemePrijema;
     return this;
   }
 
-  @Override
+  public PaketBuilder posiljatelj(String posiljatelj) {
+    this.posiljatelj = posiljatelj;
+    return this;
+  }
+
+  public PaketBuilder primatelj(String primatelj) {
+    this.primatelj = primatelj;
+    return this;
+  }
+
+  public PaketBuilder vrstaPaketa(String vrstaPaketa) {
+    this.vrstaPaketa = vrstaPaketa;
+    return this;
+  }
+
   public PaketBuilder visina(double visina) {
     this.visina = visina;
     return this;
   }
 
-  @Override
   public PaketBuilder sirina(double sirina) {
     this.sirina = sirina;
     return this;
   }
 
-  @Override
   public PaketBuilder duzina(double duzina) {
     this.duzina = duzina;
     return this;
   }
 
-  @Override
-  public PaketBuilder maksimalnaTezina(double tezina) {
-    this.maksimalnaTezina = tezina;
+  public PaketBuilder tezina(double tezina) {
+    this.tezina = tezina;
     return this;
   }
 
-  @Override
-  public PaketBuilder cijena(double cijena) {
-    this.cijena = cijena;
+  public PaketBuilder uslugaDostave(UslugaDostave uslugaDostave) {
+    this.uslugaDostave = uslugaDostave;
     return this;
   }
 
-  @Override
-  public PaketBuilder cijenaHitno(double cijenaHitno) {
-    this.cijenaHitno = cijenaHitno;
-    return this;
-  }
-
-  @Override
-  public PaketBuilder cijenaP(double cijenaP) {
-    this.cijenaP = cijenaP;
-    return this;
-  }
-
-  @Override
-  public PaketBuilder cijenaT(double cijenaT) {
-    this.cijenaT = cijenaT;
+  public PaketBuilder iznosPouzeca(double iznosPouzeca) {
+    this.iznosPouzeca = iznosPouzeca;
     return this;
   }
 
   public Paket build() {
-    return new Paket(oznaka, opis, visina, sirina, duzina, maksimalnaTezina, cijena, cijenaHitno,
-        cijenaP, cijenaT);
+    return new Paket(oznaka, vrijemePrijema, posiljatelj, primatelj, vrstaPaketa, visina, sirina,
+        duzina, tezina, uslugaDostave, iznosPouzeca);
   }
 
 }
