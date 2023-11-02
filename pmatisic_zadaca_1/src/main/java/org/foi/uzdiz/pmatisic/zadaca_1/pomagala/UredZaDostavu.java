@@ -1,5 +1,6 @@
 package org.foi.uzdiz.pmatisic.zadaca_1.pomagala;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -18,9 +19,13 @@ public class UredZaDostavu {
   private int vrijemeIsporuke;
   private List<Vozilo> vozila;
   private Queue<Paket> paketiZaDostavu;
+  private LocalDateTime trenutnoVirtualnoVrijeme;
+  private List<Paket> isporuceniPaketi = new ArrayList<>();
   private Map<Paket, Double> cijeneDostave = new HashMap<>();
   private Map<Paket, Long> vrijemeUkrcavanja = new HashMap<>();
   private Map<Vozilo, List<Paket>> ukrcaniPaketi = new HashMap<>();
+  private Map<Vozilo, Double> kapacitetTezineVozila = new HashMap<>();
+  private Map<Vozilo, Double> kapacitetVolumenaVozila = new HashMap<>();
   private Map<Vozilo, Double> prikupljeniNovacPoVozilu = new HashMap<>();
 
   public UredZaDostavu(List<Vozilo> vozila, int vrijemeIsporuke, List<Paket> paketi,
@@ -35,6 +40,10 @@ public class UredZaDostavu {
     Collections.sort(this.vozila, Comparator.comparing(Vozilo::getRedoslijed));
   }
 
+  public void postaviTrenutnoVirtualnoVrijeme(LocalDateTime vrijeme) {
+    this.trenutnoVirtualnoVrijeme = vrijeme;
+  }
+
   public void ukrcavanjePaketa() {
     for (Vozilo vozilo : vozila) {
       double trenutnaTezina = 0;
@@ -42,6 +51,11 @@ public class UredZaDostavu {
 
       while (!paketiZaDostavu.isEmpty()) {
         Paket paket = paketiZaDostavu.peek();
+
+        if (isporuceniPaketi.contains(paket)) {
+          paketiZaDostavu.poll();
+          continue;
+        }
 
         double novaTezina = trenutnaTezina + paket.getTezina();
         double noviVolumen =
@@ -52,7 +66,10 @@ public class UredZaDostavu {
           trenutnaTezina = novaTezina;
           trenutniVolumen = noviVolumen;
           ukrcaniPaketi.computeIfAbsent(vozilo, k -> new ArrayList<>()).add(paket);
-          vrijemeUkrcavanja.put(paket, System.currentTimeMillis());
+          vrijemeUkrcavanja.put(paket,
+              trenutnoVirtualnoVrijeme.toEpochSecond(java.time.ZoneOffset.UTC));
+          System.out.println("U " + trenutnoVirtualnoVrijeme + " paket " + paket.getOznaka()
+              + " je ukrcan u vozilo " + vozilo.getRegistracija());
           paketiZaDostavu.poll();
         } else {
           break;
@@ -66,9 +83,15 @@ public class UredZaDostavu {
       Vozilo vozilo = entry.getKey();
       List<Paket> paketi = entry.getValue();
 
+      if (paketi.isEmpty()) {
+        continue;
+      }
+
+      System.out.println("U " + trenutnoVirtualnoVrijeme + " dostava je pokrenuta za vozilo "
+          + vozilo.getRegistracija());
+
       boolean hitnaDostava =
           paketi.stream().anyMatch(paket -> paket.getUslugaDostave() == UslugaDostave.H);
-
       double popunjenostTezine =
           paketi.stream().mapToDouble(Paket::getTezina).sum() / vozilo.getKapacitetTezine();
       double popunjenostProstora =
@@ -77,26 +100,60 @@ public class UredZaDostavu {
 
       for (Paket paket : new ArrayList<>(paketi)) {
         long vrijemeKadaJeUkrcan = vrijemeUkrcavanja.getOrDefault(paket, 0L);
-        long razlika = System.currentTimeMillis() - vrijemeKadaJeUkrcan;
+        long razlika =
+            trenutnoVirtualnoVrijeme.toEpochSecond(java.time.ZoneOffset.UTC) - vrijemeKadaJeUkrcan;
 
-        if (razlika >= vrijemeIsporuke * 60 * 1000 || hitnaDostava || popunjenostTezine >= 0.5
+        if (hitnaDostava || razlika >= vrijemeIsporuke * 60 || popunjenostTezine >= 0.5
             || popunjenostProstora >= 0.5) {
           isporuci(paket, vozilo);
           paketi.remove(paket);
         }
       }
+      entry.getValue().clear();
     }
   }
 
   private void isporuci(Paket paket, Vozilo vozilo) {
-    System.out.println("Isporučuje se paket: " + paket.getOznaka() + " pomoću vozila: "
-        + vozilo.getRegistracija());
+    System.out.println(
+        "U " + trenutnoVirtualnoVrijeme + " paket " + paket.getOznaka() + " isporučen primatelju "
+            + paket.getPrimatelj() + " pomoću vozila: " + vozilo.getRegistracija());
 
     if (paket.getUslugaDostave() == UslugaDostave.P) {
       double trenutniNovac = prikupljeniNovacPoVozilu.getOrDefault(vozilo, 0.0);
       double noviIznos = trenutniNovac + cijeneDostave.getOrDefault(paket, 0.0);
       prikupljeniNovacPoVozilu.put(vozilo, noviIznos);
     }
+
+    isporuceniPaketi.add(paket);
+    double trenutnaTezina = kapacitetTezineVozila.getOrDefault(vozilo, 0.0);
+    double trenutniVolumen = kapacitetVolumenaVozila.getOrDefault(vozilo, 0.0);
+    kapacitetTezineVozila.put(vozilo, trenutnaTezina + paket.getTezina());
+    kapacitetVolumenaVozila.put(vozilo,
+        trenutniVolumen + paket.getVisina() * paket.getSirina() * paket.getDuzina());
+    ukrcaniPaketi.get(vozilo).remove(paket);
+  }
+
+  public List<Paket> dohvatiIsporucenePaketeZaVozilo(Vozilo vozilo) {
+    return isporuceniPaketi.stream()
+        .filter(paket -> ukrcaniPaketi.getOrDefault(vozilo, new ArrayList<>()).contains(paket))
+        .collect(Collectors.toList());
+  }
+
+  public double dohvatiTrenutnuTezinuVozila(Vozilo vozilo) {
+    return kapacitetTezineVozila.getOrDefault(vozilo, 0.0);
+  }
+
+  public double dohvatiTrenutniVolumenVozila(Vozilo vozilo) {
+    return kapacitetVolumenaVozila.getOrDefault(vozilo, 0.0);
+  }
+
+  public boolean jeIsporucen(Paket paket) {
+    for (List<Paket> paketi : ukrcaniPaketi.values()) {
+      if (paketi.contains(paket)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public double dohvatiPrikupljeniNovacZaVozilo(Vozilo vozilo) {
