@@ -10,7 +10,7 @@ import org.foi.uzdiz.pmatisic.zadaca_1.model.PrijemPaketa;
 import org.foi.uzdiz.pmatisic.zadaca_1.model.UslugaDostave;
 import org.foi.uzdiz.pmatisic.zadaca_1.pomagala.Greske;
 
-public class PrijemPaketaDatoteka implements Datoteka {
+public class PrijemPaketaDatoteka implements Datoteka<PrijemPaketa> {
 
   private String putanjaDatoteke;
   private List<PrijemPaketa> paketi = new ArrayList<>();
@@ -21,7 +21,7 @@ public class PrijemPaketaDatoteka implements Datoteka {
   }
 
   @Override
-  public List<Object> dohvatiPodatke() {
+  public List<PrijemPaketa> dohvatiPodatke() {
     return new ArrayList<>(paketi);
   }
 

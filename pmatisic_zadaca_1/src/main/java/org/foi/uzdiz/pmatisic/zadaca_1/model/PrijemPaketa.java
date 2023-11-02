@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class PrijemPaketa {
+  
   private String oznaka;
   private LocalDateTime vrijemePrijema;
   private String posiljatelj;
@@ -32,7 +33,6 @@ public class PrijemPaketa {
     this.iznosPouzeca = iznosPouzeca;
   }
 
-  // Getters
   public String getOznaka() {
     return oznaka;
   }
@@ -77,7 +77,6 @@ public class PrijemPaketa {
     return iznosPouzeca;
   }
 
-  // Setters
   public void setOznaka(String oznaka) {
     this.oznaka = oznaka;
   }
@@ -143,4 +142,5 @@ public class PrijemPaketa {
               ", iznosPouzeca=" + iznosPouzeca +
               '}';
   }
+
 }

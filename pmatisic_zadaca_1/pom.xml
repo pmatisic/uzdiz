@@ -31,7 +31,7 @@
 					<archive>
 						<manifest>
 							<mainClass>
-								org.foi.uzdiz.pmatisic.zadaca_1.pomagala.Main
+								org.foi.uzdiz.pmatisic.zadaca_1.singleton.Tvrtka
 							</mainClass>
 							<addClasspath>true</addClasspath>
 							<classpathPrefix>libs/</classpathPrefix>

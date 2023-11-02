@@ -1,6 +1,7 @@
 package org.foi.uzdiz.pmatisic.zadaca_1.model;
 
 public class VrstaPaketa {
+  
   private String oznaka;
   private String opis;
   private double visina;
@@ -26,7 +27,6 @@ public class VrstaPaketa {
     this.cijenaT = cijenaT;
   }
 
-  // Getters
   public String getOznaka() {
     return oznaka;
   }
@@ -67,7 +67,6 @@ public class VrstaPaketa {
     return cijenaT;
   }
 
-  // Setters
   public void setOznaka(String oznaka) {
     this.oznaka = oznaka;
   }
@@ -123,4 +122,5 @@ public class VrstaPaketa {
               ", cijenaT=" + cijenaT +
               '}';
   }
+
 }

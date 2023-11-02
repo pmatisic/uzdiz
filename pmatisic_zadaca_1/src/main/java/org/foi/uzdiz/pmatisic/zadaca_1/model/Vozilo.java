@@ -1,6 +1,7 @@
 package org.foi.uzdiz.pmatisic.zadaca_1.model;
 
 public class Vozilo {
+  
   private String registracija;
   private String opis;
   private double kapacitetTezine;
@@ -16,7 +17,6 @@ public class Vozilo {
     this.redoslijed = redoslijed;
   }
 
-  // Getters
   public String getRegistracija() {
     return registracija;
   }
@@ -37,7 +37,6 @@ public class Vozilo {
     return redoslijed;
   }
 
-  // Setters
   public void setRegistracija(String registracija) {
     this.registracija = registracija;
   }
@@ -68,4 +67,5 @@ public class Vozilo {
               ", redoslijed=" + redoslijed +
               '}';
   }
+
 }

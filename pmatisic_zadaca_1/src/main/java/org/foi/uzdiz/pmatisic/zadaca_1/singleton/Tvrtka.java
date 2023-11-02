@@ -1,19 +1,62 @@
 package org.foi.uzdiz.pmatisic.zadaca_1.singleton;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.foi.uzdiz.pmatisic.zadaca_1.builder.Paket;
+import org.foi.uzdiz.pmatisic.zadaca_1.factory.PrijemPaketaDatoteka;
+import org.foi.uzdiz.pmatisic.zadaca_1.factory.VoziloDatoteka;
+import org.foi.uzdiz.pmatisic.zadaca_1.factory.VrstePaketaDatoteka;
+import org.foi.uzdiz.pmatisic.zadaca_1.model.PrijemPaketa;
+import org.foi.uzdiz.pmatisic.zadaca_1.model.Vozilo;
+import org.foi.uzdiz.pmatisic.zadaca_1.model.VrstaPaketa;
 import org.foi.uzdiz.pmatisic.zadaca_1.pomagala.UredZaDostavu;
 import org.foi.uzdiz.pmatisic.zadaca_1.pomagala.UredZaPrijem;
 
 public class Tvrtka {
 
-  private Map<String, String> podatci;
   private static volatile Tvrtka instance;
+  private List<PrijemPaketa> prijemi;
+  private List<Vozilo> vozila;
+  private List<VrstaPaketa> vrste;
+  private VirtualniSat virtualniSat;
   private UredZaPrijem uredZaPrijem;
   private UredZaDostavu uredZaDostavu;
-  private VirtualniSat virtualniSat;
+  private PrijemPaketaDatoteka citacPrijemaPaketa = new PrijemPaketaDatoteka();
+  private VoziloDatoteka citacVozila = new VoziloDatoteka();
+  private VrstePaketaDatoteka citacVrstaPaketa = new VrstePaketaDatoteka();
+  private String putanjaDoPP;
+  private String putanjaDoPV;
+  private String putanjaDoVP;
+  private int maxTezina;
+  private int vrijemeIsporuke;
+  private int mnoziteljSekunde;
+  private LocalDateTime virtualnoVrijeme;
+  private LocalTime pocetakRada;
+  private LocalTime krajRada;
+
+  private Tvrtka() {}
 
   private Tvrtka(Map<String, String> podatci) {
-    this.podatci = podatci;
+    this.putanjaDoPP = podatci.get("pp");
+    this.putanjaDoPV = podatci.get("pv");
+    this.putanjaDoVP = podatci.get("vp");
+    this.maxTezina = Integer.parseInt(podatci.get("mt"));
+    this.vrijemeIsporuke = Integer.parseInt(podatci.get("vi"));
+    this.mnoziteljSekunde = Integer.parseInt(podatci.get("ms"));
+
+    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm:ss");
+    this.virtualnoVrijeme = LocalDateTime.parse(podatci.get("vs"), dateTimeFormatter);
+
+    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+    this.pocetakRada = LocalTime.parse(podatci.get("pr"), timeFormatter);
+    this.krajRada = LocalTime.parse(podatci.get("kr"), timeFormatter);
   }
 
   public static Tvrtka getInstance(Map<String, String> noviPodatci) {
@@ -25,30 +68,140 @@ public class Tvrtka {
           instance = result = new Tvrtka(noviPodatci);
         }
       }
-    } else if (!result.podatci.equals(noviPodatci)) {
-      result.updatePodatci(noviPodatci);
     }
     return result;
   }
 
-  private void updatePodatci(Map<String, String> noviPodatci) {
-    this.podatci = noviPodatci;
+  public static void main(String[] args) {
+    Tvrtka t = new Tvrtka();
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < args.length; i++) {
+      sb.append(args[i]).append(" ");
+    }
+
+    String s = sb.toString().trim();
+    Matcher m = t.provjeriArgumente(s);
+    if (m == null) {
+      System.out.println("Greška u argumentima ili fali argument, provjerite unos!");
+      return;
+    }
+
+    Map<String, String> podatci = obradiKomandu(m);
+    if (podatci == null) {
+      System.out.println("Greška u komandi!");
+      return;
+    }
+
+    Tvrtka tvrtkaInstance = Tvrtka.getInstance(podatci);
+    tvrtkaInstance.ucitajPodatke();
+    // tvrtkaInstance.pratitiVrijemeIPrimitiPakete();
+    // tvrtkaInstance.interakcija();
   }
 
-  public Map<String, String> getPodatci() {
-    return podatci;
+  public void ucitajPodatke() {
+    citacPrijemaPaketa.postaviPutanju(putanjaDoPP);
+    citacVozila.postaviPutanju(putanjaDoPV);
+    citacVrstaPaketa.postaviPutanju(putanjaDoVP);
+
+    citacPrijemaPaketa.citajPodatke();
+    citacVozila.citajPodatke();
+    citacVrstaPaketa.citajPodatke();
+
+    prijemi = (List<PrijemPaketa>) citacPrijemaPaketa.dohvatiPodatke();
+    vozila = (List<Vozilo>) citacVozila.dohvatiPodatke();
+    vrste = (List<VrstaPaketa>) citacVrstaPaketa.dohvatiPodatke();
+
+    uredZaPrijem = new UredZaPrijem(vrste);
+    uredZaPrijem.preuzmiPodatkeIzPrijema(prijemi);
+    List<Paket> primljeniPaketi = uredZaPrijem.dohvatiPrimljenePakete();
+    Map<Paket, Double> cijeneDostave = new HashMap<>();
+
+    for (Paket paket : primljeniPaketi) {
+      Double cijenaDostave = uredZaPrijem.dohvatiCijenuDostaveZaPaket(paket);
+      if (cijenaDostave != null) {
+        System.out.println(paket + ", Cijena dostave: " + cijenaDostave);
+        cijeneDostave.put(paket, cijenaDostave);
+      } else {
+        System.out.println(paket + ", Cijena dostave nije određena.");
+      }
+    }
+
+    uredZaDostavu = new UredZaDostavu(vozila, vrijemeIsporuke, primljeniPaketi, cijeneDostave);
+    uredZaDostavu.ukrcavanjePaketa();
+    uredZaDostavu.isporukaPaketa();
+    for (Vozilo vozilo : vozila) {
+      double novac = uredZaDostavu.dohvatiPrikupljeniNovacZaVozilo(vozilo);
+      System.out.println("Vozilo s registracijom " + vozilo.getRegistracija() + " je prikupilo: "
+          + novac + " novčanih jedinica.");
+    }
+
   }
 
-  public UredZaPrijem getUredZaPrijem() {
-    return uredZaPrijem;
+  public void interakcija() {
+    Scanner scanner = new Scanner(System.in);
+    String unos;
+    do {
+      System.out.println("Unesite komandu:");
+      unos = scanner.nextLine();
+      if (unos.equals("IP")) {
+      } else if (unos.startsWith("VR ")) {
+      } else {
+        System.out.println("Pogrešan unos!");
+      }
+    } while (!unos.equals("Q"));
+    scanner.close();
+    System.out.println("Program je završen.");
   }
 
-  public UredZaDostavu getUredZaDostavu() {
-    return uredZaDostavu;
+  public void pratitiVrijemeIPrimitiPakete() {
+    while (true) {
+      try {
+        // Ovdje čekamo stvarno vrijeme prema mnozitelju sekunde
+        Thread.sleep(1000 / mnoziteljSekunde);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      // Ažuriranje virtualnog sata
+      virtualnoVrijeme = virtualnoVrijeme.plusSeconds(mnoziteljSekunde);
+      // Ispisivanje virtualnog vremena
+      System.out.println("Virtualno vrijeme: " + virtualnoVrijeme);
+      // Provjera primitka novih paketa
+      provjeriPakete();
+    }
   }
 
-  public String getVirtualnoVrijeme() {
-    return virtualniSat.dohvatiTrenutnoVrijeme();
+  private void provjeriPakete() {
+    for (PrijemPaketa prijem : prijemi) {
+      if (prijem.getVrijemePrijema().equals(virtualnoVrijeme)) {
+        uredZaPrijem.preuzmiPodatkeIzPrijema(List.of(prijem));
+        System.out.println("Primljen paket: " + prijem.getOznaka());
+      }
+    }
+  }
+
+  private Matcher provjeriArgumente(String s) {
+    String sintaksa =
+        "^(?=.*--vp (?<vp>[^\\s]+\\.csv))(?=.*--pv (?<pv>[^\\s]+\\.csv))(?=.*--pp (?<pp>[^\\s]+\\.csv))(?=.*--mt (?<mt>\\d+(?=\\s|$)))(?=.*--vi (?<vi>\\d+(?=\\s|$)))(?=.*--vs '?(?<vs>(0[1-9]|[12][0-9]|3[01])\\.(0[1-9]|1[0-2])\\.\\d{4}\\. (0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9])'?)(?=.*--ms (?<ms>\\d+(?=\\s|$)))(?=.*--pr '?(?<pr>(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9])'?)(?=.*--kr '?(?<kr>(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9])'?).+$";
+    Pattern p = Pattern.compile(sintaksa);
+    Matcher m = p.matcher(s);
+    if (!m.matches()) {
+      return null;
+    }
+    return m;
+  }
+
+  private static Map<String, String> obradiKomandu(Matcher m) {
+    Map<String, String> grupe = new HashMap<>();
+    grupe.put("vp", m.group("vp"));
+    grupe.put("pv", m.group("pv"));
+    grupe.put("pp", m.group("pp"));
+    grupe.put("mt", m.group("mt"));
+    grupe.put("vi", m.group("vi"));
+    grupe.put("vs", m.group("vs"));
+    grupe.put("ms", m.group("ms"));
+    grupe.put("pr", m.group("pr"));
+    grupe.put("kr", m.group("kr"));
+    return grupe;
   }
 
 }

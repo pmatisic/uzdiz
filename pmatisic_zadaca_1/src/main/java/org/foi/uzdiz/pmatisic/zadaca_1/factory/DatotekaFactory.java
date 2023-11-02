@@ -3,17 +3,19 @@ package org.foi.uzdiz.pmatisic.zadaca_1.factory;
 import java.util.Map;
 
 public class DatotekaFactory {
-  public static Datoteka stvoriDatoteku(String kljuc, Map<String, String> argumenti) {
-    Datoteka datoteka;
+
+  @SuppressWarnings("unchecked")
+  public static <T> Datoteka<T> stvoriDatoteku(String kljuc, Map<String, String> argumenti) {
+    Datoteka<T> datoteka;
     switch (kljuc) {
       case "vp":
-        datoteka = new VrstePaketaDatoteka();
+        datoteka = (Datoteka<T>) new VrstePaketaDatoteka();
         break;
       case "pv":
-        datoteka = new VoziloDatoteka();
+        datoteka = (Datoteka<T>) new VoziloDatoteka();
         break;
       case "pp":
-        datoteka = new PrijemPaketaDatoteka();
+        datoteka = (Datoteka<T>) new PrijemPaketaDatoteka();
         break;
       default:
         throw new IllegalArgumentException("Neispravan ključ za datoteku: " + kljuc);
@@ -21,4 +23,5 @@ public class DatotekaFactory {
     datoteka.postaviPutanju(argumenti.get(kljuc));
     return datoteka;
   }
+
 }

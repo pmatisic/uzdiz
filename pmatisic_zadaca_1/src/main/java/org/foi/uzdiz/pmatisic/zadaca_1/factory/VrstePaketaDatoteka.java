@@ -9,7 +9,7 @@ import java.util.List;
 import org.foi.uzdiz.pmatisic.zadaca_1.model.VrstaPaketa;
 import org.foi.uzdiz.pmatisic.zadaca_1.pomagala.Greske;
 
-public class VrstePaketaDatoteka implements Datoteka {
+public class VrstePaketaDatoteka implements Datoteka<VrstaPaketa> {
 
   private String putanjaDatoteke;
   private List<VrstaPaketa> vrste = new ArrayList<>();
@@ -20,7 +20,7 @@ public class VrstePaketaDatoteka implements Datoteka {
   }
 
   @Override
-  public List<Object> dohvatiPodatke() {
+  public List<VrstaPaketa> dohvatiPodatke() {
     return new ArrayList<>(vrste);
   }
 

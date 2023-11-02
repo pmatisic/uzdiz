@@ -2,9 +2,7 @@ package org.foi.uzdiz.pmatisic.zadaca_1.builder;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import org.foi.uzdiz.pmatisic.zadaca_1.model.UslugaDostave;
-import org.foi.uzdiz.pmatisic.zadaca_1.model.VrstaPaketa;
 
 public class Paket {
 
@@ -80,30 +78,25 @@ public class Paket {
     return iznosPouzeca;
   }
 
-  @Override
-  public String toString() {
-    return String.format("PrijemPaketa {\noznaka='%s',\nvrijemePrijema='%s',\n...}", oznaka,
-        vrijemePrijema);
-  }
-
   public static LocalDateTime konvertirajVrijeme(String vrijeme) {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm:ss");
     return LocalDateTime.parse(vrijeme, formatter);
   }
-
-  public double izracunajCijenuDostave(List<VrstaPaketa> vrstePaketa) {
-    for (VrstaPaketa vrsta : vrstePaketa) {
-      if (this.vrstaPaketa.equals(vrsta.getOznaka())) {
-        if (this.vrstaPaketa.equals("X")) {
-          double volumen = this.visina * this.sirina * this.duzina;
-          return vrsta.getCijena() + (volumen * vrsta.getCijenaP())
-              + (this.tezina * vrsta.getCijenaT());
-        } else {
-          return vrsta.getCijena();
-        }
-      }
-    }
-    return 0.0; // Ako vrsta paketa nije pronađena, vrati 0.0
+  
+  @Override
+  public String toString() {
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm:ss");
+    return "Paket[" +
+           "Oznaka='" + oznaka + '\'' +
+           ", VrijemePrijema=" + vrijemePrijema.format(formatter) +
+           ", Posiljatelj='" + posiljatelj + '\'' +
+           ", Primatelj='" + primatelj + '\'' +
+           ", VrstaPaketa='" + vrstaPaketa + '\'' +
+           ", Dimenzije=" + visina + "x" + sirina + "x" + duzina +
+           ", Tezina=" + tezina +
+           ", UslugaDostave=" + (uslugaDostave != null ? uslugaDostave.toString() : "N/A") +
+           ", IznosPouzeca=" + iznosPouzeca +
+           ']';
   }
 
 }

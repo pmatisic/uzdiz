@@ -75,8 +75,10 @@ public class PaketBuilder implements Builder {
   }
 
   public Paket build() {
-    return new Paket(oznaka, vrijemePrijema, posiljatelj, primatelj, vrstaPaketa, visina, sirina,
-        duzina, tezina, uslugaDostave, iznosPouzeca);
+    Paket paket = new Paket(oznaka, vrijemePrijema, posiljatelj, primatelj, vrstaPaketa, visina,
+        sirina, duzina, tezina, uslugaDostave, iznosPouzeca);
+
+    return paket;
   }
 
 }
