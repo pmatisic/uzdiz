@@ -98,23 +98,23 @@ public class UredZaPrijem {
 
   public void ispisTablicePrimljenihPaketa(UredZaDostavu uredZaDostavu) {
     System.out.println(
-        "+---------------+-------------+-------------+----------------+----------------+--------------+--------------+");
+        "+----------------------+----------------------+----------------------+----------------------+---------------------------+----------------------+----------------------+");
     System.out.println(
-        "| Vrijeme prij. | Vrsta pak.  | Vrsta usl.  | Status ispor.  | Vrijeme preuz. | Iznos dost.  | Iznos pouz.  |");
+        "|   Vrijeme prijema    |   Vrsta paketa       |   Vrsta usluge       |   Status isporuke    |   Vrijeme preuzimanja     |     Iznos dostave    |     Iznos poduzeća   |");
     System.out.println(
-        "+---------------+-------------+-------------+----------------+----------------+--------------+--------------+");
+        "+----------------------+----------------------+----------------------+----------------------+---------------------------+----------------------+----------------------+");
 
     for (Paket paket : dohvatiPrimljenePakete()) {
       String statusIsporuke = (uredZaDostavu.jeIsporucen(paket)) ? "Dostavljeno" : "Na čekanju";
       String vrijemePreuzimanja =
           (uredZaDostavu.jeIsporucen(paket)) ? paket.getVrijemePrijema().toString() : "-";
       Double iznosDostave = mapaCijenaDostave.getOrDefault(paket, 0.0);
-      System.out.printf("| %13s | %11s | %11s | %14s | %14s | %12.2f | %12.2f |\n",
+      System.out.printf("| %-20s | %-20s | %-20s | %-20s | %-25s | %20.2f | %20.2f |\n",
           paket.getVrijemePrijema(), paket.getVrstaPaketa(), paket.getUslugaDostave(),
           statusIsporuke, vrijemePreuzimanja, iznosDostave, paket.getIznosPouzeca());
     }
     System.out.println(
-        "+---------------+-------------+-------------+----------------+----------------+--------------+--------------+");
+        "+----------------------+----------------------+----------------------+----------------------+---------------------------+----------------------+----------------------+");
   }
 
 }
