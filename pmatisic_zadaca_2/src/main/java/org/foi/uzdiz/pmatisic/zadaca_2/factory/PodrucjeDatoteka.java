@@ -1,4 +1,4 @@
-package org.foi.uzdiz.pmatisic.zadaca_3.factory;
+package org.foi.uzdiz.pmatisic.zadaca_2.factory;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -6,13 +6,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import org.foi.uzdiz.pmatisic.zadaca_2.model.Ulica;
+import org.foi.uzdiz.pmatisic.zadaca_2.model.Podrucje;
+import org.foi.uzdiz.pmatisic.zadaca_2.model.Podrucje.Par;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.Greske;
 
-public class UlicaDatoteka implements Datoteka<Ulica> {
+public class PodrucjeDatoteka implements Datoteka<Podrucje> {
 
   private String putanjaDatoteke;
-  private List<Ulica> ulice = new ArrayList<>();
+  private List<Podrucje> podrucja = new ArrayList<>();
 
   @Override
   public void postaviPutanju(String putanja) {
@@ -20,8 +21,8 @@ public class UlicaDatoteka implements Datoteka<Ulica> {
   }
 
   @Override
-  public List<Ulica> dohvatiPodatke() {
-    return new ArrayList<>(ulice);
+  public List<Podrucje> dohvatiPodatke() {
+    return new ArrayList<>(podrucja);
   }
 
   @Override
@@ -34,7 +35,7 @@ public class UlicaDatoteka implements Datoteka<Ulica> {
       }
 
       List<String> linije = Files.readAllLines(staza, Charset.forName("UTF-8"));
-      ulice.clear();
+      podrucja.clear();
 
       if (!linije.isEmpty() && linije.get(0).startsWith("id")) {
         linije.remove(0);
@@ -43,22 +44,23 @@ public class UlicaDatoteka implements Datoteka<Ulica> {
       for (String linija : linije) {
         String[] dijelovi = linija.split(";");
 
-        if (dijelovi.length != 7) {
+        if (dijelovi.length != 2) {
           Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija, "Pogrešan broj atributa");
           continue;
         }
 
         try {
           int id = Integer.parseInt(dijelovi[0].trim());
-          String naziv = dijelovi[1].trim();
-          double gpsLat1 = Double.parseDouble(dijelovi[2].trim());
-          double gpsLon1 = Double.parseDouble(dijelovi[3].trim());
-          double gpsLat2 = Double.parseDouble(dijelovi[4].trim());
-          double gpsLon2 = Double.parseDouble(dijelovi[5].trim());
-          int najveciKucniBroj = Integer.parseInt(dijelovi[6].trim());
+          List<Par<Integer, String>> gradUlicaParovi = new ArrayList<>();
+          for (String par : dijelovi[1].split(",")) {
+            String[] gradUlica = par.split(":");
+            int gradId = Integer.parseInt(gradUlica[0].trim());
+            String ulica = gradUlica[1].trim();
+            gradUlicaParovi.add(new Par<>(gradId, ulica));
+          }
 
-          Ulica ulica = new Ulica(id, naziv, gpsLat1, gpsLon1, gpsLat2, gpsLon2, najveciKucniBroj);
-          ulice.add(ulica);
+          Podrucje podrucje = new Podrucje(id, gradUlicaParovi);
+          podrucja.add(podrucje);
         } catch (NumberFormatException e) {
           Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija,
               "Greška prilikom konverzije broja: " + e.getMessage());

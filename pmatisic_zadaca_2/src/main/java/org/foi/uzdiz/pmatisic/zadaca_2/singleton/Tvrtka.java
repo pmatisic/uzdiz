@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 import org.foi.uzdiz.pmatisic.zadaca_2.builder.Paket;
+import org.foi.uzdiz.pmatisic.zadaca_2.factory.PrijemPaketaDatoteka;
+import org.foi.uzdiz.pmatisic.zadaca_2.factory.VoziloDatoteka;
+import org.foi.uzdiz.pmatisic.zadaca_2.factory.VrstaPaketaDatoteka;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.PrijemPaketa;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Vozilo;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.VrstaPaketa;
@@ -16,9 +19,6 @@ import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.Greske;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.Provjera;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.UredZaDostavu;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.UredZaPrijem;
-import org.foi.uzdiz.pmatisic.zadaca_3.factory.PrijemPaketaDatoteka;
-import org.foi.uzdiz.pmatisic.zadaca_3.factory.VoziloDatoteka;
-import org.foi.uzdiz.pmatisic.zadaca_3.factory.VrstaPaketaDatoteka;
 
 public class Tvrtka {
 

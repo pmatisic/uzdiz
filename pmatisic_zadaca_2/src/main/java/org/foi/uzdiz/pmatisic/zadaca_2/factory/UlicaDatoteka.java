@@ -1,4 +1,4 @@
-package org.foi.uzdiz.pmatisic.zadaca_3.factory;
+package org.foi.uzdiz.pmatisic.zadaca_2.factory;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -6,14 +6,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import org.foi.uzdiz.pmatisic.zadaca_2.model.StatusVozila;
-import org.foi.uzdiz.pmatisic.zadaca_2.model.Vozilo;
+import org.foi.uzdiz.pmatisic.zadaca_2.model.Ulica;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.Greske;
 
-public class VoziloDatoteka implements Datoteka<Vozilo> {
+public class UlicaDatoteka implements Datoteka<Ulica> {
 
   private String putanjaDatoteke;
-  private List<Vozilo> vozila = new ArrayList<>();
+  private List<Ulica> ulice = new ArrayList<>();
 
   @Override
   public void postaviPutanju(String putanja) {
@@ -21,8 +20,8 @@ public class VoziloDatoteka implements Datoteka<Vozilo> {
   }
 
   @Override
-  public List<Vozilo> dohvatiPodatke() {
-    return new ArrayList<>(vozila);
+  public List<Ulica> dohvatiPodatke() {
+    return new ArrayList<>(ulice);
   }
 
   @Override
@@ -35,37 +34,34 @@ public class VoziloDatoteka implements Datoteka<Vozilo> {
       }
 
       List<String> linije = Files.readAllLines(staza, Charset.forName("UTF-8"));
-      vozila.clear();
+      ulice.clear();
 
-      if (!linije.isEmpty() && linije.get(0).startsWith("Registracija")) {
+      if (!linije.isEmpty() && linije.get(0).startsWith("id")) {
         linije.remove(0);
       }
 
       for (String linija : linije) {
         String[] dijelovi = linija.split(";");
 
-        if (dijelovi.length != 8) {
+        if (dijelovi.length != 7) {
           Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija, "Pogrešan broj atributa");
           continue;
         }
 
         try {
-          double kapacitetTezine = Double.parseDouble(dijelovi[2].replace(',', '.'));
-          double kapacitetProstora = Double.parseDouble(dijelovi[3].replace(',', '.'));
-          int redoslijed = Integer.parseInt(dijelovi[4]);
-          double prosjecnaBrzina = Double.parseDouble(dijelovi[5]);
-          String podrucjaPoRangu = dijelovi[6];
-          StatusVozila status = StatusVozila.valueOf(dijelovi[7]);
+          int id = Integer.parseInt(dijelovi[0].trim());
+          String naziv = dijelovi[1].trim();
+          double gpsLat1 = Double.parseDouble(dijelovi[2].trim());
+          double gpsLon1 = Double.parseDouble(dijelovi[3].trim());
+          double gpsLat2 = Double.parseDouble(dijelovi[4].trim());
+          double gpsLon2 = Double.parseDouble(dijelovi[5].trim());
+          int najveciKucniBroj = Integer.parseInt(dijelovi[6].trim());
 
-          Vozilo vozilo = new Vozilo(dijelovi[0], dijelovi[1], kapacitetTezine, kapacitetProstora,
-              redoslijed, prosjecnaBrzina, podrucjaPoRangu, status);
-          vozila.add(vozilo);
+          Ulica ulica = new Ulica(id, naziv, gpsLat1, gpsLon1, gpsLat2, gpsLon2, najveciKucniBroj);
+          ulice.add(ulica);
         } catch (NumberFormatException e) {
           Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija,
               "Greška prilikom konverzije broja: " + e.getMessage());
-        } catch (IllegalArgumentException e) {
-          Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija,
-              "Nevažeći status vozila: " + e.getMessage());
         } catch (Exception e) {
           Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija,
               "Opća greška prilikom obrade retka: " + e.getMessage());

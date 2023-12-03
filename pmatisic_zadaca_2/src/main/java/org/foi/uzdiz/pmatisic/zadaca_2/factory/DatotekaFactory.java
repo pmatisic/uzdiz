@@ -1,4 +1,4 @@
-package org.foi.uzdiz.pmatisic.zadaca_3.factory;
+package org.foi.uzdiz.pmatisic.zadaca_2.factory;
 
 import java.util.Map;
 
