@@ -96,5 +96,4 @@ public class PrijemPaketaDatoteka implements Datoteka<PrijemPaketa> {
       e.printStackTrace();
     }
   }
-
 }

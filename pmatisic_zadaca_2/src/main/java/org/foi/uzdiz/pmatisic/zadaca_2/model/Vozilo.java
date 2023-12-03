@@ -1,20 +1,26 @@
 package org.foi.uzdiz.pmatisic.zadaca_2.model;
 
 public class Vozilo {
-  
+
   private String registracija;
   private String opis;
   private double kapacitetTezine;
   private double kapacitetProstora;
   private int redoslijed;
+  private double prosjecnaBrzina;
+  private String podrucjaPoRangu;
+  private StatusVozila status;
 
   public Vozilo(String registracija, String opis, double kapacitetTezine, double kapacitetProstora,
-      int redoslijed) {
+      int redoslijed, double prosjecnaBrzina, String podrucjaPoRangu, StatusVozila status) {
     this.registracija = registracija;
     this.opis = opis;
     this.kapacitetTezine = kapacitetTezine;
     this.kapacitetProstora = kapacitetProstora;
     this.redoslijed = redoslijed;
+    this.prosjecnaBrzina = prosjecnaBrzina;
+    this.podrucjaPoRangu = podrucjaPoRangu;
+    this.status = status;
   }
 
   public String getRegistracija() {
@@ -37,6 +43,18 @@ public class Vozilo {
     return redoslijed;
   }
 
+  public double getProsjecnaBrzina() {
+    return prosjecnaBrzina;
+  }
+
+  public String getPodrucjaPoRangu() {
+    return podrucjaPoRangu;
+  }
+
+  public StatusVozila getStatus() {
+    return status;
+  }
+
   public void setRegistracija(String registracija) {
     this.registracija = registracija;
   }
@@ -57,6 +75,18 @@ public class Vozilo {
     this.redoslijed = redoslijed;
   }
 
+  public void setProsjecnaBrzina(double prosjecnaBrzina) {
+    this.prosjecnaBrzina = prosjecnaBrzina;
+  }
+
+  public void setPodrucjaPoRangu(String podrucjaPoRangu) {
+    this.podrucjaPoRangu = podrucjaPoRangu;
+  }
+
+  public void setStatus(StatusVozila status) {
+    this.status = status;
+  }
+
   @Override
   public String toString() {
       return "Vozilo{" +
@@ -65,6 +95,9 @@ public class Vozilo {
               ", kapacitetTezine=" + kapacitetTezine +
               ", kapacitetProstora=" + kapacitetProstora +
               ", redoslijed=" + redoslijed +
+              ", prosjecnaBrzina=" + prosjecnaBrzina +
+              ", podrucjaPoRangu='" + podrucjaPoRangu + '\'' +
+              ", status=" + status +
               '}';
   }
 

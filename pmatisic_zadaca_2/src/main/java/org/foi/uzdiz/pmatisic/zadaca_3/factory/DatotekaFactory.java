@@ -9,7 +9,7 @@ public class DatotekaFactory {
     Datoteka<T> datoteka;
     switch (kljuc) {
       case "vp":
-        datoteka = (Datoteka<T>) new VrstePaketaDatoteka();
+        datoteka = (Datoteka<T>) new VrstaPaketaDatoteka();
         break;
       case "pv":
         datoteka = (Datoteka<T>) new VoziloDatoteka();

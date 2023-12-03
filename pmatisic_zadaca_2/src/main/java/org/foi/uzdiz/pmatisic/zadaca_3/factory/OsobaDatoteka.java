@@ -6,13 +6,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import org.foi.uzdiz.pmatisic.zadaca_2.model.VrstaPaketa;
+import org.foi.uzdiz.pmatisic.zadaca_2.model.Osoba;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.Greske;
 
-public class VrstePaketaDatoteka implements Datoteka<VrstaPaketa> {
+public class OsobaDatoteka implements Datoteka<Osoba> {
 
   private String putanjaDatoteke;
-  private List<VrstaPaketa> vrste = new ArrayList<>();
+  private List<Osoba> osobe = new ArrayList<>();
 
   @Override
   public void postaviPutanju(String putanja) {
@@ -20,8 +20,8 @@ public class VrstePaketaDatoteka implements Datoteka<VrstaPaketa> {
   }
 
   @Override
-  public List<VrstaPaketa> dohvatiPodatke() {
-    return new ArrayList<>(vrste);
+  public List<Osoba> dohvatiPodatke() {
+    return new ArrayList<>(osobe);
   }
 
   @Override
@@ -34,31 +34,28 @@ public class VrstePaketaDatoteka implements Datoteka<VrstaPaketa> {
       }
 
       List<String> linije = Files.readAllLines(staza, Charset.forName("UTF-8"));
-      vrste.clear();
+      osobe.clear();
 
-      if (!linije.isEmpty() && linije.get(0).startsWith("Oznaka")) {
+      if (!linije.isEmpty() && linije.get(0).startsWith("osoba")) {
         linije.remove(0);
       }
 
       for (String linija : linije) {
         String[] dijelovi = linija.split(";");
 
-        if (dijelovi.length != 10) {
+        if (dijelovi.length != 4) {
           Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija, "Pogrešan broj atributa");
           continue;
         }
 
         try {
-          VrstaPaketa vrstaPaketa = new VrstaPaketa(dijelovi[0], dijelovi[1],
-              Double.parseDouble(dijelovi[2].replace(',', '.')),
-              Double.parseDouble(dijelovi[3].replace(',', '.')),
-              Double.parseDouble(dijelovi[4].replace(',', '.')),
-              Double.parseDouble(dijelovi[5].replace(',', '.')),
-              Double.parseDouble(dijelovi[6].replace(',', '.')),
-              Double.parseDouble(dijelovi[7].replace(',', '.')),
-              Double.parseDouble(dijelovi[8].replace(',', '.')),
-              Double.parseDouble(dijelovi[9].replace(',', '.')));
-          vrste.add(vrstaPaketa);
+          String ime = dijelovi[0].trim();
+          int gradId = Integer.parseInt(dijelovi[1].trim());
+          int ulicaId = Integer.parseInt(dijelovi[2].trim());
+          int kucniBroj = Integer.parseInt(dijelovi[3].trim());
+
+          Osoba osoba = new Osoba(ime, gradId, ulicaId, kucniBroj);
+          osobe.add(osoba);
         } catch (NumberFormatException e) {
           Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija,
               "Greška prilikom konverzije broja: " + e.getMessage());
@@ -71,5 +68,4 @@ public class VrstePaketaDatoteka implements Datoteka<VrstaPaketa> {
       e.printStackTrace();
     }
   }
-
 }

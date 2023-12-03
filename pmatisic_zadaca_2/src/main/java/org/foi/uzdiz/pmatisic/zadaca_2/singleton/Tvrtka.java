@@ -7,18 +7,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.foi.uzdiz.pmatisic.zadaca_2.builder.Paket;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.PrijemPaketa;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Vozilo;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.VrstaPaketa;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.Greske;
+import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.Provjera;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.UredZaDostavu;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.UredZaPrijem;
 import org.foi.uzdiz.pmatisic.zadaca_3.factory.PrijemPaketaDatoteka;
 import org.foi.uzdiz.pmatisic.zadaca_3.factory.VoziloDatoteka;
-import org.foi.uzdiz.pmatisic.zadaca_3.factory.VrstePaketaDatoteka;
+import org.foi.uzdiz.pmatisic.zadaca_3.factory.VrstaPaketaDatoteka;
 
 public class Tvrtka {
 
@@ -30,7 +30,7 @@ public class Tvrtka {
   private UredZaDostavu uredZaDostavu;
   private PrijemPaketaDatoteka citacPrijemaPaketa = new PrijemPaketaDatoteka();
   private VoziloDatoteka citacVozila = new VoziloDatoteka();
-  private VrstePaketaDatoteka citacVrstaPaketa = new VrstePaketaDatoteka();
+  private VrstaPaketaDatoteka citacVrstaPaketa = new VrstaPaketaDatoteka();
   private String putanjaDoPP;
   private String putanjaDoPV;
   private String putanjaDoVP;
@@ -71,29 +71,36 @@ public class Tvrtka {
   }
 
   public static void main(String[] args) {
-    Tvrtka t = new Tvrtka();
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < args.length; i++) {
-      sb.append(args[i]).append(" ");
-    }
-
-    String s = sb.toString().trim();
-    Matcher m = t.provjeriArgumente(s);
-    if (m == null) {
+    if (args.length != 1) {
       System.out.println("Greška u argumentima ili fali argument, provjerite unos!");
       return;
     }
 
-    Map<String, String> podatci = obradiKomandu(m);
-    if (podatci == null) {
-      System.out.println("Greška u komandi!");
+    String regexZaArgument = "^[^\\s]+\\.txt$";
+    if (!Pattern.matches(regexZaArgument, args[0])) {
+      System.out.println("Neispravan format argumenta, očekivana je .txt datoteka!");
       return;
     }
 
-    Tvrtka tvrtkaInstance = Tvrtka.getInstance(podatci);
-    tvrtkaInstance.citajPodatke();
-    tvrtkaInstance.ucitajPodatke();
-    tvrtkaInstance.interakcija();
+    Provjera provjera = new Provjera(args[0]);
+    if (!provjera.provjeriDatoteku()) {
+      return;
+    }
+
+    Map<String, String> podatci = provjera.dohvatiPodatke();
+    if (podatci == null || podatci.isEmpty()) {
+      System.out.println("Greška u dohvaćanju podataka!");
+      return;
+    }
+
+    for (Map.Entry<String, String> entry : podatci.entrySet()) {
+      System.out.println("Ključ: " + entry.getKey() + ", Vrijednost: " + entry.getValue());
+    }
+
+    // Tvrtka tvrtkaInstance = Tvrtka.getInstance(podatci);
+    // tvrtkaInstance.citajPodatke();
+    // tvrtkaInstance.ucitajPodatke();
+    // tvrtkaInstance.interakcija();
   }
 
   public void interakcija() {
@@ -192,31 +199,6 @@ public class Tvrtka {
     uredZaDostavu.postaviTrenutnoVirtualnoVrijeme(virtualnoVrijeme);
     uredZaDostavu.ukrcavanjePaketa();
     uredZaDostavu.isporukaPaketa();
-  }
-
-  private Matcher provjeriArgumente(String s) {
-    String sintaksa =
-        "^(?=.*--vp (?<vp>[^\\s]+\\.csv))(?=.*--pv (?<pv>[^\\s]+\\.csv))(?=.*--pp (?<pp>[^\\s]+\\.csv))(?=.*--mt (?<mt>\\d+(?=\\s|$)))(?=.*--vi (?<vi>\\d+(?=\\s|$)))(?=.*--vs '?(?<vs>(0[1-9]|[12][0-9]|3[01])\\.(0[1-9]|1[0-2])\\.\\d{4}\\. (0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9])'?)(?=.*--ms (?<ms>\\d+(?=\\s|$)))(?=.*--pr '?(?<pr>(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9])'?)(?=.*--kr '?(?<kr>(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9])'?).+$";
-    Pattern p = Pattern.compile(sintaksa);
-    Matcher m = p.matcher(s);
-    if (!m.matches()) {
-      return null;
-    }
-    return m;
-  }
-
-  private static Map<String, String> obradiKomandu(Matcher m) {
-    Map<String, String> grupe = new HashMap<>();
-    grupe.put("vp", m.group("vp"));
-    grupe.put("pv", m.group("pv"));
-    grupe.put("pp", m.group("pp"));
-    grupe.put("mt", m.group("mt"));
-    grupe.put("vi", m.group("vi"));
-    grupe.put("vs", m.group("vs"));
-    grupe.put("ms", m.group("ms"));
-    grupe.put("pr", m.group("pr"));
-    grupe.put("kr", m.group("kr"));
-    return grupe;
   }
 
 }
