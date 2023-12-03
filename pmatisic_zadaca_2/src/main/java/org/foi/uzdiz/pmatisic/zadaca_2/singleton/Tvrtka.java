@@ -9,10 +9,18 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 import org.foi.uzdiz.pmatisic.zadaca_2.builder.Paket;
+import org.foi.uzdiz.pmatisic.zadaca_2.factory.MjestoDatoteka;
+import org.foi.uzdiz.pmatisic.zadaca_2.factory.OsobaDatoteka;
+import org.foi.uzdiz.pmatisic.zadaca_2.factory.PodrucjeDatoteka;
 import org.foi.uzdiz.pmatisic.zadaca_2.factory.PrijemPaketaDatoteka;
+import org.foi.uzdiz.pmatisic.zadaca_2.factory.UlicaDatoteka;
 import org.foi.uzdiz.pmatisic.zadaca_2.factory.VoziloDatoteka;
 import org.foi.uzdiz.pmatisic.zadaca_2.factory.VrstaPaketaDatoteka;
+import org.foi.uzdiz.pmatisic.zadaca_2.model.Mjesto;
+import org.foi.uzdiz.pmatisic.zadaca_2.model.Osoba;
+import org.foi.uzdiz.pmatisic.zadaca_2.model.Podrucje;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.PrijemPaketa;
+import org.foi.uzdiz.pmatisic.zadaca_2.model.Ulica;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Vozilo;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.VrstaPaketa;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.Greske;
@@ -23,33 +31,51 @@ import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.UredZaPrijem;
 public class Tvrtka {
 
   private static volatile Tvrtka instance;
-  private List<PrijemPaketa> prijemi;
-  private List<Vozilo> vozila;
-  private List<VrstaPaketa> vrste;
   private UredZaPrijem uredZaPrijem;
   private UredZaDostavu uredZaDostavu;
-  private PrijemPaketaDatoteka citacPrijemaPaketa = new PrijemPaketaDatoteka();
-  private VoziloDatoteka citacVozila = new VoziloDatoteka();
   private VrstaPaketaDatoteka citacVrstaPaketa = new VrstaPaketaDatoteka();
-  private String putanjaDoPP;
-  private String putanjaDoPV;
+  private VoziloDatoteka citacVozila = new VoziloDatoteka();
+  private PrijemPaketaDatoteka citacPrijemaPaketa = new PrijemPaketaDatoteka();
+  private OsobaDatoteka citacOsoba = new OsobaDatoteka();
+  private MjestoDatoteka citacMjesta = new MjestoDatoteka();
+  private UlicaDatoteka citacUlica = new UlicaDatoteka();
+  private PodrucjeDatoteka citacPodrucja = new PodrucjeDatoteka();
+  private List<VrstaPaketa> vrste;
+  private List<Vozilo> vozila;
+  private List<PrijemPaketa> prijemi;
+  private List<Osoba> osobe;
+  private List<Mjesto> mjesta;
+  private List<Ulica> ulice;
+  private List<Podrucje> podrucja;
   private String putanjaDoVP;
+  private String putanjaDoPV;
+  private String putanjaDoPP;
+  private String putanjaDoPO;
+  private String putanjaDoPM;
+  private String putanjaDoPU;
+  private String putanjaDoPMU;
+  private String gps;
   private int maxTezina;
   private int vrijemeIsporuke;
   private int mnoziteljSekunde;
+  private int isporuka;
   private LocalDateTime virtualnoVrijeme;
   private LocalTime pocetakRada;
   private LocalTime krajRada;
 
-  private Tvrtka() {}
-
   private Tvrtka(Map<String, String> podatci) {
-    this.putanjaDoPP = podatci.get("pp");
-    this.putanjaDoPV = podatci.get("pv");
     this.putanjaDoVP = podatci.get("vp");
+    this.putanjaDoPV = podatci.get("pv");
+    this.putanjaDoPP = podatci.get("pp");
+    this.putanjaDoPO = podatci.get("po");
+    this.putanjaDoPM = podatci.get("pm");
+    this.putanjaDoPU = podatci.get("pu");
+    this.putanjaDoPMU = podatci.get("pmu");
+    this.gps = podatci.get("gps").toString();
     this.maxTezina = Integer.parseInt(podatci.get("mt"));
     this.vrijemeIsporuke = Integer.parseInt(podatci.get("vi"));
     this.mnoziteljSekunde = Integer.parseInt(podatci.get("ms"));
+    this.isporuka = Integer.parseInt(podatci.get("isporuka"));
     DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm:ss");
     this.virtualnoVrijeme = LocalDateTime.parse(podatci.get("vs"), dateTimeFormatter);
     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
@@ -93,13 +119,9 @@ public class Tvrtka {
       return;
     }
 
-    for (Map.Entry<String, String> entry : podatci.entrySet()) {
-      System.out.println("Ključ: " + entry.getKey() + ", Vrijednost: " + entry.getValue());
-    }
-
-    // Tvrtka tvrtkaInstance = Tvrtka.getInstance(podatci);
-    // tvrtkaInstance.citajPodatke();
-    // tvrtkaInstance.ucitajPodatke();
+    Tvrtka tvrtkaInstance = Tvrtka.getInstance(podatci);
+    tvrtkaInstance.citajPodatke();
+    // tvrtkaInstance.stvoriUredZaPrijem();
     // tvrtkaInstance.interakcija();
   }
 
@@ -118,7 +140,7 @@ public class Tvrtka {
           }
           break;
         case "Q":
-          System.out.println("Program je završen.");
+          System.out.println("Izlazak iz programa.");
           break;
         default:
           if (unos.startsWith("VR ")) {
@@ -133,29 +155,34 @@ public class Tvrtka {
   }
 
   public void citajPodatke() {
-    citacPrijemaPaketa.postaviPutanju(putanjaDoPP);
-    citacVozila.postaviPutanju(putanjaDoPV);
     citacVrstaPaketa.postaviPutanju(putanjaDoVP);
-
-    citacPrijemaPaketa.citajPodatke();
-    citacVozila.citajPodatke();
+    citacVozila.postaviPutanju(putanjaDoPV);
+    citacPrijemaPaketa.postaviPutanju(putanjaDoPP);
+    citacOsoba.postaviPutanju(putanjaDoPO);
+    citacMjesta.postaviPutanju(putanjaDoPM);
+    citacUlica.postaviPutanju(putanjaDoPU);
+    citacPodrucja.postaviPutanju(putanjaDoPMU);
     citacVrstaPaketa.citajPodatke();
+    citacVozila.citajPodatke();
+    citacPrijemaPaketa.citajPodatke();
+    citacOsoba.citajPodatke();
+    citacMjesta.citajPodatke();
+    citacUlica.citajPodatke();
+    citacPodrucja.citajPodatke();
   }
 
-  public void ucitajPodatke() {
+  public void stvoriUredZaPrijem() {
     prijemi = (List<PrijemPaketa>) citacPrijemaPaketa.dohvatiPodatke();
-    vozila = (List<Vozilo>) citacVozila.dohvatiPodatke();
     vrste = (List<VrstaPaketa>) citacVrstaPaketa.dohvatiPodatke();
-
     uredZaPrijem = new UredZaPrijem(vrste, maxTezina);
     uredZaPrijem.preuzmiPodatkeIzPrijema(prijemi);
-    uredZaPrijem.postaviTrenutnoVirtualnoVrijeme(virtualnoVrijeme);
+    uredZaPrijem.postaviVirtualnoVrijeme(virtualnoVrijeme);
   }
 
   private Map<Paket, Double> dohvatiCijeneDostave(List<Paket> paketi) {
     Map<Paket, Double> cijene = new HashMap<>();
     for (Paket paket : paketi) {
-      Double cijena = uredZaPrijem.dohvatiCijenuDostaveZaPaket(paket);
+      Double cijena = uredZaPrijem.dohvatiCijenuDostave(paket);
       if (cijena != null) {
         cijene.put(paket, cijena);
       }

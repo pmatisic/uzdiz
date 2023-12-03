@@ -5,9 +5,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Mjesto;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.Greske;
 
@@ -53,8 +51,11 @@ public class MjestoDatoteka implements Datoteka<Mjesto> {
         try {
           int id = Integer.parseInt(dijelovi[0].trim());
           String naziv = dijelovi[1].trim();
-          List<Integer> ulice = Arrays.stream(dijelovi[2].split(",")).map(String::trim)
-              .map(Integer::parseInt).collect(Collectors.toList());
+          String[] ulicaIds = dijelovi[2].split(",");
+          List<Integer> ulice = new ArrayList<>();
+          for (String ulicaId : ulicaIds) {
+            ulice.add(Integer.parseInt(ulicaId.trim()));
+          }
 
           Mjesto mjesto = new Mjesto(id, naziv, ulice);
           mjesta.add(mjesto);

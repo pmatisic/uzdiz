@@ -1,6 +1,7 @@
 package org.foi.uzdiz.pmatisic.zadaca_2.pomagala;
 
-import java.io.FileInputStream;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,23 +41,23 @@ public class Provjera {
   }
 
   public boolean provjeriDatoteku() {
-    try {
-      properties.load(new FileInputStream(putanjaDatoteke));
-      for (String kljuc : ocekivaniKljucevi) {
-        String vrijednost = properties.getProperty(kljuc);
-        if (vrijednost != null) {
-          vrijednost = vrijednost.trim();
+    try (BufferedReader br = new BufferedReader(new FileReader(putanjaDatoteke))) {
+      String linija;
+      while ((linija = br.readLine()) != null) {
+        String[] split = linija.split("=", 2);
+        if (split.length != 2) {
+          System.out.println("Neispravan format linije: " + linija);
+          return false;
         }
-        if (vrijednost == null || !jeVrijednostValidna(kljuc, vrijednost)) {
+        String kljuc = split[0].trim();
+        String vrijednost = split[1].trim();
+
+        if (!ocekivaniKljucevi.contains(kljuc) || !jeVrijednostValidna(kljuc, vrijednost)) {
           System.out.println("Nedostaje ključ ili neispravna vrijednost za ključ: " + kljuc);
           return false;
         }
-      }
-      for (Object k : properties.keySet()) {
-        if (!ocekivaniKljucevi.contains(k.toString())) {
-          System.out.println("Nepoznati ključ u datoteci: " + k);
-          return false;
-        }
+
+        properties.setProperty(kljuc, vrijednost);
       }
       return true;
     } catch (IOException e) {
