@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 import org.foi.uzdiz.pmatisic.zadaca_2.builder.Paket;
+import org.foi.uzdiz.pmatisic.zadaca_2.factory.DatotekaFactory;
 import org.foi.uzdiz.pmatisic.zadaca_2.factory.MjestoDatoteka;
 import org.foi.uzdiz.pmatisic.zadaca_2.factory.OsobaDatoteka;
 import org.foi.uzdiz.pmatisic.zadaca_2.factory.PodrucjeDatoteka;
@@ -33,13 +34,13 @@ public class Tvrtka {
   private static volatile Tvrtka instance;
   private UredZaPrijem uredZaPrijem;
   private UredZaDostavu uredZaDostavu;
-  private VrstaPaketaDatoteka citacVrstaPaketa = new VrstaPaketaDatoteka();
-  private VoziloDatoteka citacVozila = new VoziloDatoteka();
-  private PrijemPaketaDatoteka citacPrijemaPaketa = new PrijemPaketaDatoteka();
-  private OsobaDatoteka citacOsoba = new OsobaDatoteka();
-  private MjestoDatoteka citacMjesta = new MjestoDatoteka();
-  private UlicaDatoteka citacUlica = new UlicaDatoteka();
-  private PodrucjeDatoteka citacPodrucja = new PodrucjeDatoteka();
+  private Object citacVrstaPaketa = new VrstaPaketaDatoteka();
+  private Object citacVozila = new VoziloDatoteka();
+  private Object citacPrijemaPaketa = new PrijemPaketaDatoteka();
+  private Object citacOsoba = new OsobaDatoteka();
+  private Object citacMjesta = new MjestoDatoteka();
+  private Object citacUlica = new UlicaDatoteka();
+  private Object citacPodrucja = new PodrucjeDatoteka();
   private List<VrstaPaketa> vrste;
   private List<Vozilo> vozila;
   private List<PrijemPaketa> prijemi;
@@ -47,13 +48,6 @@ public class Tvrtka {
   private List<Mjesto> mjesta;
   private List<Ulica> ulice;
   private List<Podrucje> podrucja;
-  private String putanjaDoVP;
-  private String putanjaDoPV;
-  private String putanjaDoPP;
-  private String putanjaDoPO;
-  private String putanjaDoPM;
-  private String putanjaDoPU;
-  private String putanjaDoPMU;
   private String gps;
   private int maxTezina;
   private int vrijemeIsporuke;
@@ -64,13 +58,6 @@ public class Tvrtka {
   private LocalTime krajRada;
 
   private Tvrtka(Map<String, String> podatci) {
-    this.putanjaDoVP = podatci.get("vp");
-    this.putanjaDoPV = podatci.get("pv");
-    this.putanjaDoPP = podatci.get("pp");
-    this.putanjaDoPO = podatci.get("po");
-    this.putanjaDoPM = podatci.get("pm");
-    this.putanjaDoPU = podatci.get("pu");
-    this.putanjaDoPMU = podatci.get("pmu");
     this.gps = podatci.get("gps").toString();
     this.maxTezina = Integer.parseInt(podatci.get("mt"));
     this.vrijemeIsporuke = Integer.parseInt(podatci.get("vi"));
@@ -120,7 +107,7 @@ public class Tvrtka {
     }
 
     Tvrtka tvrtkaInstance = Tvrtka.getInstance(podatci);
-    tvrtkaInstance.citajPodatke();
+    tvrtkaInstance.citajPodatke(podatci);
     tvrtkaInstance.stvoriUredZaPrijem();
     tvrtkaInstance.interakcija();
   }
@@ -136,7 +123,7 @@ public class Tvrtka {
           try {
             uredZaPrijem.ispisTablicePrimljenihPaketa(uredZaDostavu);
           } catch (Exception e) {
-            Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, "-", "Nema podataka!");
+            Greske.logirajGresku(Greske.getRedniBrojGreske(), null, "Nema podataka!");
           }
           break;
         case "Q":
@@ -154,26 +141,26 @@ public class Tvrtka {
     scanner.close();
   }
 
-  public void citajPodatke() {
-    citacVrstaPaketa.postaviPutanju(putanjaDoVP);
-    citacVozila.postaviPutanju(putanjaDoPV);
-    citacPrijemaPaketa.postaviPutanju(putanjaDoPP);
-    citacOsoba.postaviPutanju(putanjaDoPO);
-    citacMjesta.postaviPutanju(putanjaDoPM);
-    citacUlica.postaviPutanju(putanjaDoPU);
-    citacPodrucja.postaviPutanju(putanjaDoPMU);
-    citacVrstaPaketa.citajPodatke();
-    citacVozila.citajPodatke();
-    citacPrijemaPaketa.citajPodatke();
-    citacOsoba.citajPodatke();
-    citacMjesta.citajPodatke();
-    citacUlica.citajPodatke();
-    citacPodrucja.citajPodatke();
+  public void citajPodatke(Map<String, String> podatci) {
+    citacVrstaPaketa = DatotekaFactory.stvoriDatoteku("vp", podatci);
+    citacVozila = DatotekaFactory.stvoriDatoteku("pv", podatci);
+    citacPrijemaPaketa = DatotekaFactory.stvoriDatoteku("pp", podatci);
+    citacOsoba = DatotekaFactory.stvoriDatoteku("po", podatci);
+    citacMjesta = DatotekaFactory.stvoriDatoteku("pm", podatci);
+    citacUlica = DatotekaFactory.stvoriDatoteku("pu", podatci);
+    citacPodrucja = DatotekaFactory.stvoriDatoteku("pmu", podatci);
+    ((VrstaPaketaDatoteka) citacVrstaPaketa).citajPodatke();
+    ((VoziloDatoteka) citacVozila).citajPodatke();
+    ((PrijemPaketaDatoteka) citacPrijemaPaketa).citajPodatke();
+    ((OsobaDatoteka) citacOsoba).citajPodatke();
+    ((MjestoDatoteka) citacMjesta).citajPodatke();
+    ((UlicaDatoteka) citacUlica).citajPodatke();
+    ((PodrucjeDatoteka) citacPodrucja).citajPodatke();
   }
 
   public void stvoriUredZaPrijem() {
-    prijemi = (List<PrijemPaketa>) citacPrijemaPaketa.dohvatiPodatke();
-    vrste = (List<VrstaPaketa>) citacVrstaPaketa.dohvatiPodatke();
+    prijemi = (List<PrijemPaketa>) ((PrijemPaketaDatoteka) citacPrijemaPaketa).dohvatiPodatke();
+    vrste = (List<VrstaPaketa>) ((VrstaPaketaDatoteka) citacVrstaPaketa).dohvatiPodatke();
     uredZaPrijem = new UredZaPrijem(vrste, maxTezina);
     uredZaPrijem.preuzmiPodatkeIzPrijema(prijemi);
     uredZaPrijem.postaviVirtualnoVrijeme(virtualnoVrijeme);
@@ -212,7 +199,8 @@ public class Tvrtka {
     }
 
     virtualnoVrijeme = virtualnoVrijeme.plusSeconds(mnoziteljSekunde);
-    System.out.println("Virtualno vrijeme: " + virtualnoVrijeme);
+    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm");
+    System.out.println("Virtualno vrijeme: " + virtualnoVrijeme.format(dateTimeFormatter));
 
     if (virtualnoVrijeme.toLocalTime().isBefore(pocetakRada)) {
       System.out.println("Prije početka radnog vremena!");

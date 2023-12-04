@@ -1,6 +1,7 @@
 package org.foi.uzdiz.pmatisic.zadaca_2.pomagala;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +57,17 @@ public class UredZaPrijem {
         continue;
       }
 
+      if (paket.getVrstaPaketa().equals("X")) {
+        VrstaPaketa vrsta = mapaVrstaPaketa.get(paket.getVrstaPaketa());
+        if (paket.getVisina() > vrsta.getVisina() || paket.getSirina() > vrsta.getSirina()
+            || paket.getDuzina() > vrsta.getDuzina()) {
+          Greske.logirajGresku(Greske.getRedniBrojGreske() + 1,
+              "Paket s oznakom " + paket.getOznaka(),
+              "Paket prelazi maksimalne dimenzije za vrstu X.");
+          continue;
+        }
+      }
+
       primljeniPaketi.add(paket);
 
       if (paket.getUslugaDostave() != UslugaDostave.P) {
@@ -85,16 +97,6 @@ public class UredZaPrijem {
     List<Paket> filtriraniPaketi = new ArrayList<>();
     for (Paket paket : primljeniPaketi) {
       if (!paket.getVrijemePrijema().isAfter(trenutnoVirtualnoVrijeme)) {
-        if (paket.getVrstaPaketa().equals("X")) {
-          VrstaPaketa vrsta = mapaVrstaPaketa.get(paket.getVrstaPaketa());
-          if (paket.getVisina() > vrsta.getVisina() || paket.getSirina() > vrsta.getSirina()
-              || paket.getDuzina() > vrsta.getDuzina()) {
-            Greske.logirajGresku(Greske.getRedniBrojGreske() + 1,
-                "Paket s oznakom " + paket.getOznaka(),
-                "Paket prelazi maksimalne dimenzije za vrstu X.");
-            continue;
-          }
-        }
         filtriraniPaketi.add(paket);
       }
     }
@@ -114,10 +116,11 @@ public class UredZaPrijem {
       String vrijemePreuzimanja =
           (uredZaDostavu.jeIsporucen(paket)) ? paket.getVrijemePrijema().toString() : "-";
       Double iznosDostave = mapaCijenaDostave.getOrDefault(paket, 0.0);
+      DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm:ss");
       System.out.printf("| %-6s | %-20s | %-20s | %-20s | %-20s | %-25s | %20.2f | %20.2f |\n",
-          paket.getOznaka(), paket.getVrijemePrijema(), paket.getVrstaPaketa(),
-          paket.getUslugaDostave(), statusIsporuke, vrijemePreuzimanja, iznosDostave,
-          paket.getIznosPouzeca());
+          paket.getOznaka(), paket.getVrijemePrijema().format(dateTimeFormatter),
+          paket.getVrstaPaketa(), paket.getUslugaDostave(), statusIsporuke, vrijemePreuzimanja,
+          iznosDostave, paket.getIznosPouzeca());
     }
     System.out.println(
         "+-----------+----------------------+----------------------+----------------------+----------------------+---------------------------+----------------------+----------------------+");

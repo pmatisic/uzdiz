@@ -5,7 +5,10 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.StatusVozila;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Vozilo;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.Greske;
@@ -41,8 +44,15 @@ public class VoziloDatoteka implements Datoteka<Vozilo> {
         linije.remove(0);
       }
 
+      Set<String> dozvoljeniStatusi = new HashSet<>(Arrays.asList("A", "NA", "NI"));
+
       for (String linija : linije) {
-        String[] dijelovi = linija.split(";");
+        if (linija.trim().isEmpty()) {
+          continue;
+        }
+
+        String[] dijelovi =
+            Arrays.stream(linija.split(";")).map(String::trim).toArray(String[]::new);
 
         if (dijelovi.length != 8) {
           Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija, "Pogrešan broj atributa");
@@ -55,7 +65,13 @@ public class VoziloDatoteka implements Datoteka<Vozilo> {
           int redoslijed = Integer.parseInt(dijelovi[4]);
           double prosjecnaBrzina = Double.parseDouble(dijelovi[5]);
           String podrucjaPoRangu = dijelovi[6];
-          StatusVozila status = StatusVozila.valueOf(dijelovi[7]);
+          String statusString = dijelovi[7];
+          if (!dozvoljeniStatusi.contains(statusString)) {
+            Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija,
+                "Nevažeći status vozila: " + statusString);
+            continue;
+          }
+          StatusVozila status = StatusVozila.valueOf(statusString);
 
           Vozilo vozilo = new Vozilo(dijelovi[0], dijelovi[1], kapacitetTezine, kapacitetProstora,
               redoslijed, prosjecnaBrzina, podrucjaPoRangu, status);
@@ -63,9 +79,6 @@ public class VoziloDatoteka implements Datoteka<Vozilo> {
         } catch (NumberFormatException e) {
           Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija,
               "Greška prilikom konverzije broja: " + e.getMessage());
-        } catch (IllegalArgumentException e) {
-          Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija,
-              "Nevažeći status vozila: " + e.getMessage());
         } catch (Exception e) {
           Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija,
               "Opća greška prilikom obrade retka: " + e.getMessage());

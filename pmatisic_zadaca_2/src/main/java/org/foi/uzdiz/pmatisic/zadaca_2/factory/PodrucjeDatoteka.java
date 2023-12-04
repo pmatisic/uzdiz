@@ -42,6 +42,10 @@ public class PodrucjeDatoteka implements Datoteka<Podrucje> {
       }
 
       for (String linija : linije) {
+        if (linija.trim().isEmpty()) {
+          continue;
+        }
+
         String[] dijelovi = linija.split(";");
 
         if (dijelovi.length != 2) {

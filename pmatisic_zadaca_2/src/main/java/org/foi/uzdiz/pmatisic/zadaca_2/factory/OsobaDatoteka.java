@@ -41,6 +41,10 @@ public class OsobaDatoteka implements Datoteka<Osoba> {
       }
 
       for (String linija : linije) {
+        if (linija.trim().isEmpty()) {
+          continue;
+        }
+
         String[] dijelovi = linija.split(";");
 
         if (dijelovi.length != 4) {

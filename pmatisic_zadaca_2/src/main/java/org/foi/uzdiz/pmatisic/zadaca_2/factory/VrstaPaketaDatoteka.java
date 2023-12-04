@@ -5,6 +5,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.VrstaPaketa;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.Greske;
@@ -41,7 +42,12 @@ public class VrstaPaketaDatoteka implements Datoteka<VrstaPaketa> {
       }
 
       for (String linija : linije) {
-        String[] dijelovi = linija.split(";");
+        if (linija.trim().isEmpty()) {
+          continue;
+        }
+
+        String[] dijelovi =
+            Arrays.stream(linija.split(";")).map(String::trim).toArray(String[]::new);
 
         if (dijelovi.length != 10) {
           Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija, "Pogrešan broj atributa");

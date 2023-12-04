@@ -17,6 +17,18 @@ public class DatotekaFactory {
       case "pp":
         datoteka = (Datoteka<T>) new PrijemPaketaDatoteka();
         break;
+      case "po":
+        datoteka = (Datoteka<T>) new OsobaDatoteka();
+        break;
+      case "pm":
+        datoteka = (Datoteka<T>) new MjestoDatoteka();
+        break;
+      case "pu":
+        datoteka = (Datoteka<T>) new UlicaDatoteka();
+        break;
+      case "pmu":
+        datoteka = (Datoteka<T>) new PodrucjeDatoteka();
+        break;
       default:
         throw new IllegalArgumentException("Neispravan ključ za datoteku: " + kljuc);
     }
