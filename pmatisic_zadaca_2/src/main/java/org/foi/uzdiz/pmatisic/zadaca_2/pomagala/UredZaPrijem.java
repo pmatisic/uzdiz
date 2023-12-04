@@ -55,9 +55,9 @@ public class UredZaPrijem {
             "Paket s oznakom " + paket.getOznaka(), "Paket prelazi maksimalnu dopuštenu težinu.");
         continue;
       }
-      
+
       primljeniPaketi.add(paket);
-      
+
       if (paket.getUslugaDostave() != UslugaDostave.P) {
         double cijena = izracunajCijenuDostave(paket);
         mapaCijenaDostave.put(paket, cijena);
@@ -103,11 +103,11 @@ public class UredZaPrijem {
 
   public void ispisTablicePrimljenihPaketa(UredZaDostavu uredZaDostavu) {
     System.out.println(
-        "+--------+----------------------+----------------------+----------------------+----------------------+---------------------------+----------------------+----------------------+");
+        "+-----------+----------------------+----------------------+----------------------+----------------------+---------------------------+----------------------+----------------------+");
     System.out.println(
-        "| Oznaka |   Vrijeme prijema    |   Vrsta paketa       |   Vrsta usluge       |   Status isporuke    |   Vrijeme preuzimanja     |     Iznos dostave    |     Iznos poduzeća   |");
+        "|   Oznaka  |   Vrijeme prijema    |   Vrsta paketa       |   Vrsta usluge       |   Status isporuke    |   Vrijeme preuzimanja     |     Iznos dostave    |     Iznos poduzeća   |");
     System.out.println(
-        "+--------+----------------------+----------------------+----------------------+----------------------+---------------------------+----------------------+----------------------+");
+        "+-----------+----------------------+----------------------+----------------------+----------------------+---------------------------+----------------------+----------------------+");
 
     for (Paket paket : dohvatiPrimljenePakete()) {
       String statusIsporuke = (uredZaDostavu.jeIsporucen(paket)) ? "Dostavljeno" : "Na čekanju";
@@ -120,7 +120,7 @@ public class UredZaPrijem {
           paket.getIznosPouzeca());
     }
     System.out.println(
-        "+--------+----------------------+----------------------+----------------------+----------------------+---------------------------+----------------------+----------------------+");
+        "+-----------+----------------------+----------------------+----------------------+----------------------+---------------------------+----------------------+----------------------+");
   }
 
 }

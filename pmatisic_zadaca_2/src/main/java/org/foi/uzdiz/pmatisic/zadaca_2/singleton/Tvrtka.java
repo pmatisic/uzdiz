@@ -121,8 +121,8 @@ public class Tvrtka {
 
     Tvrtka tvrtkaInstance = Tvrtka.getInstance(podatci);
     tvrtkaInstance.citajPodatke();
-    // tvrtkaInstance.stvoriUredZaPrijem();
-    // tvrtkaInstance.interakcija();
+    tvrtkaInstance.stvoriUredZaPrijem();
+    tvrtkaInstance.interakcija();
   }
 
   public void interakcija() {

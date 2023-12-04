@@ -9,7 +9,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.stream.Collectors;
 import org.foi.uzdiz.pmatisic.zadaca_2.builder.Paket;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.UslugaDostave;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Vozilo;
@@ -30,15 +29,32 @@ public class UredZaDostavu {
 
   public UredZaDostavu(List<Vozilo> vozila, int vrijemeIsporuke, List<Paket> paketi,
       Map<Paket, Double> cijene) {
-    this.vozila = vozila;
+    if (vozila != null) {
+      this.vozila = vozila;
+      Collections.sort(this.vozila, Comparator.comparing(Vozilo::getRedoslijed));
+    } else {
+      this.vozila = new ArrayList<>();
+    }
+
+    if (paketi != null) {
+      List<Paket> sortiranaLista = new ArrayList<>(paketi);
+      Collections.sort(sortiranaLista, new Comparator<Paket>() {
+        @Override
+        public int compare(Paket p1, Paket p2) {
+          boolean p1Hitno = p1.getUslugaDostave() == UslugaDostave.H;
+          boolean p2Hitno = p2.getUslugaDostave() == UslugaDostave.H;
+          return Boolean.compare(p2Hitno, p1Hitno);
+        }
+      });
+      this.paketiZaDostavu = new LinkedList<>(sortiranaLista);
+    } else {
+      this.paketiZaDostavu = new LinkedList<>();
+    }
+
     this.vrijemeIsporuke = vrijemeIsporuke;
-    this.paketiZaDostavu = new LinkedList<>(paketi);
-    this.paketiZaDostavu = this.paketiZaDostavu.stream().sorted(Comparator
-        .comparing((Paket paket) -> paket.getUslugaDostave() == UslugaDostave.H ? 0 : 1).reversed())
-        .collect(Collectors.toCollection(LinkedList::new));
-    this.cijeneDostave.putAll(cijene);
-    Collections.sort(this.vozila, Comparator.comparing(Vozilo::getRedoslijed));
+    this.cijeneDostave = (cijene != null) ? new HashMap<>(cijene) : new HashMap<>();
   }
+
 
   public void postaviTrenutnoVirtualnoVrijeme(LocalDateTime vrijeme) {
     this.trenutnoVirtualnoVrijeme = vrijeme;
@@ -90,13 +106,18 @@ public class UredZaDostavu {
       System.out.println("U " + trenutnoVirtualnoVrijeme + " dostava je pokrenuta za vozilo "
           + vozilo.getRegistracija());
 
-      boolean hitnaDostava =
-          paketi.stream().anyMatch(paket -> paket.getUslugaDostave() == UslugaDostave.H);
-      double popunjenostTezine =
-          paketi.stream().mapToDouble(Paket::getTezina).sum() / vozilo.getKapacitetTezine();
-      double popunjenostProstora =
-          paketi.stream().mapToDouble(p -> p.getVisina() * p.getSirina() * p.getDuzina()).sum()
-              / vozilo.getKapacitetProstora();
+      boolean hitnaDostava = false;
+      double ukupnaTezina = 0;
+      double ukupniVolumen = 0;
+      for (Paket paket : paketi) {
+        if (paket.getUslugaDostave() == UslugaDostave.H) {
+          hitnaDostava = true;
+        }
+        ukupnaTezina += paket.getTezina();
+        ukupniVolumen += paket.getVisina() * paket.getSirina() * paket.getDuzina();
+      }
+      double popunjenostTezine = ukupnaTezina / vozilo.getKapacitetTezine();
+      double popunjenostProstora = ukupniVolumen / vozilo.getKapacitetProstora();
 
       for (Paket paket : new ArrayList<>(paketi)) {
         long vrijemeKadaJeUkrcan = vrijemeUkrcavanja.getOrDefault(paket, 0L);
@@ -134,9 +155,16 @@ public class UredZaDostavu {
   }
 
   public List<Paket> dohvatiIsporucenePaketeZaVozilo(Vozilo vozilo) {
-    return isporuceniPaketi.stream()
-        .filter(paket -> ukrcaniPaketi.getOrDefault(vozilo, new ArrayList<>()).contains(paket))
-        .collect(Collectors.toList());
+    List<Paket> isporuceniPaketiZaVozilo = new ArrayList<>();
+    List<Paket> ukrcaniPaketiVozila = ukrcaniPaketi.getOrDefault(vozilo, new ArrayList<>());
+
+    for (Paket paket : isporuceniPaketi) {
+      if (ukrcaniPaketiVozila.contains(paket)) {
+        isporuceniPaketiZaVozilo.add(paket);
+      }
+    }
+
+    return isporuceniPaketiZaVozilo;
   }
 
   public double dohvatiTrenutnuTezinuVozila(Vozilo vozilo) {
