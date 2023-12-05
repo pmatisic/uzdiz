@@ -108,7 +108,7 @@ public class Tvrtka {
 
     Tvrtka tvrtkaInstance = Tvrtka.getInstance(podatci);
     tvrtkaInstance.citajPodatke(podatci);
-    tvrtkaInstance.stvoriUredZaPrijem();
+    tvrtkaInstance.inicijaliziraj();
     tvrtkaInstance.interakcija();
   }
 
@@ -158,12 +158,20 @@ public class Tvrtka {
     ((PodrucjeDatoteka) citacPodrucja).citajPodatke();
   }
 
-  public void stvoriUredZaPrijem() {
+  public void inicijaliziraj() {
     prijemi = (List<PrijemPaketa>) ((PrijemPaketaDatoteka) citacPrijemaPaketa).dohvatiPodatke();
     vrste = (List<VrstaPaketa>) ((VrstaPaketaDatoteka) citacVrstaPaketa).dohvatiPodatke();
+    vozila = (List<Vozilo>) ((VoziloDatoteka) citacVozila).dohvatiPodatke();
+
     uredZaPrijem = new UredZaPrijem(vrste, maxTezina);
     uredZaPrijem.preuzmiPodatkeIzPrijema(prijemi);
     uredZaPrijem.postaviVirtualnoVrijeme(virtualnoVrijeme);
+
+    List<Paket> primljeniPaketi = uredZaPrijem.dohvatiPrimljenePakete();
+    Map<Paket, Double> cijeneDostave = dohvatiCijeneDostave(primljeniPaketi);
+
+    uredZaDostavu = new UredZaDostavu(vozila, vrijemeIsporuke, primljeniPaketi, cijeneDostave);
+    uredZaDostavu.postaviTrenutnoVirtualnoVrijeme(virtualnoVrijeme);
   }
 
   private Map<Paket, Double> dohvatiCijeneDostave(List<Paket> paketi) {
@@ -202,16 +210,15 @@ public class Tvrtka {
     DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm");
     System.out.println("Virtualno vrijeme: " + virtualnoVrijeme.format(dateTimeFormatter));
 
-    if (virtualnoVrijeme.toLocalTime().isBefore(pocetakRada)) {
-      System.out.println("Prije početka radnog vremena!");
+    if (virtualnoVrijeme.toLocalTime().isBefore(pocetakRada)
+        || virtualnoVrijeme.toLocalTime().isAfter(krajRada)) {
+      System.out.println("Izvan radnog vremena!");
       return;
     }
 
-    List<Paket> primljeniPaketi = uredZaPrijem.dohvatiPrimljenePakete();
-    Map<Paket, Double> cijeneDostave = dohvatiCijeneDostave(primljeniPaketi);
-
-    uredZaDostavu = new UredZaDostavu(vozila, vrijemeIsporuke, primljeniPaketi, cijeneDostave);
+    uredZaPrijem.postaviVirtualnoVrijeme(virtualnoVrijeme);
     uredZaDostavu.postaviTrenutnoVirtualnoVrijeme(virtualnoVrijeme);
+
     uredZaDostavu.ukrcavanjePaketa();
     uredZaDostavu.isporukaPaketa();
   }

@@ -112,11 +112,13 @@ public class UredZaPrijem {
         "+-----------+----------------------+----------------------+----------------------+----------------------+---------------------------+----------------------+----------------------+");
 
     for (Paket paket : dohvatiPrimljenePakete()) {
-      String statusIsporuke = (uredZaDostavu.jeIsporucen(paket)) ? "Dostavljeno" : "Na čekanju";
-      String vrijemePreuzimanja =
-          (uredZaDostavu.jeIsporucen(paket)) ? paket.getVrijemePrijema().toString() : "-";
-      Double iznosDostave = mapaCijenaDostave.getOrDefault(paket, 0.0);
       DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm:ss");
+      String statusIsporuke =
+          UredZaDostavu.statusPaketa.getOrDefault(paket.getOznaka(), "Na čekanju");
+      String vrijemePreuzimanja = statusIsporuke.equals("Dostavljeno")
+          ? trenutnoVirtualnoVrijeme.format(dateTimeFormatter).toString()
+          : "-";
+      Double iznosDostave = mapaCijenaDostave.getOrDefault(paket, 0.0);
       System.out.printf("| %-6s | %-20s | %-20s | %-20s | %-20s | %-25s | %20.2f | %20.2f |\n",
           paket.getOznaka(), paket.getVrijemePrijema().format(dateTimeFormatter),
           paket.getVrstaPaketa(), paket.getUslugaDostave(), statusIsporuke, vrijemePreuzimanja,
