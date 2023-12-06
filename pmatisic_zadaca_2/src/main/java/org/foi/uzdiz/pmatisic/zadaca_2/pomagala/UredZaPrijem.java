@@ -23,12 +23,12 @@ public class UredZaPrijem {
   public UredZaPrijem(List<VrstaPaketa> vrstePaketa, int maxTezina) {
     this.maxTezina = maxTezina;
     for (VrstaPaketa vrsta : vrstePaketa) {
-      mapaVrstaPaketa.put(vrsta.getOznaka(), vrsta);
+      this.mapaVrstaPaketa.put(vrsta.getOznaka(), vrsta);
     }
   }
 
   public Double dohvatiCijenuDostave(Paket paket) {
-    return mapaCijenaDostave.getOrDefault(paket, null);
+    return this.mapaCijenaDostave.getOrDefault(paket, null);
   }
 
   public void postaviVirtualnoVrijeme(LocalDateTime vrijeme) {
@@ -37,19 +37,12 @@ public class UredZaPrijem {
 
   public void preuzmiPodatkeIzPrijema(List<PrijemPaketa> prijemi) {
     for (PrijemPaketa prijem : prijemi) {
-      Paket paket = new PaketBuilder()
-                    .oznaka(prijem.getOznaka())
-                    .vrijemePrijema(prijem.getVrijemePrijema())
-                    .posiljatelj(prijem.getPosiljatelj())
-                    .primatelj(prijem.getPrimatelj())
-                    .vrstaPaketa(prijem.getVrstaPaketa())
-                    .visina(prijem.getVisina())
-                    .sirina(prijem.getSirina())
-                    .duzina(prijem.getDuzina())
-                    .tezina(prijem.getTezina())
-                    .uslugaDostave(prijem.getUslugaDostave())
-                    .iznosPouzeca(prijem.getIznosPouzeca())
-                    .build();
+      Paket paket = new PaketBuilder().oznaka(prijem.getOznaka())
+          .vrijemePrijema(prijem.getVrijemePrijema()).posiljatelj(prijem.getPosiljatelj())
+          .primatelj(prijem.getPrimatelj()).vrstaPaketa(prijem.getVrstaPaketa())
+          .visina(prijem.getVisina()).sirina(prijem.getSirina()).duzina(prijem.getDuzina())
+          .tezina(prijem.getTezina()).uslugaDostave(prijem.getUslugaDostave())
+          .iznosPouzeca(prijem.getIznosPouzeca()).build();
 
       if (paket.getTezina() > this.maxTezina) {
         Greske.logirajGresku(Greske.getRedniBrojGreske() + 1,
@@ -96,7 +89,7 @@ public class UredZaPrijem {
   public List<Paket> dohvatiPrimljenePakete() {
     List<Paket> filtriraniPaketi = new ArrayList<>();
     for (Paket paket : primljeniPaketi) {
-      if (!paket.getVrijemePrijema().isAfter(trenutnoVirtualnoVrijeme)) {
+      if (paket.getVrijemePrijema().isBefore(trenutnoVirtualnoVrijeme)) {
         filtriraniPaketi.add(paket);
       }
     }

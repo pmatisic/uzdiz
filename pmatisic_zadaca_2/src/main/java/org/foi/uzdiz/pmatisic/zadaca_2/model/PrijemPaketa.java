@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class PrijemPaketa {
-  
+
   private String oznaka;
   private LocalDateTime vrijemePrijema;
   private String posiljatelj;
@@ -17,9 +17,9 @@ public class PrijemPaketa {
   private UslugaDostave uslugaDostave;
   private double iznosPouzeca;
 
-  public PrijemPaketa(String oznaka, LocalDateTime vrijemePrijema, String posiljatelj, String primatelj,
-      String vrstaPaketa, double visina, double sirina, double duzina, double tezina,
-      UslugaDostave uslugaDostave, double iznosPouzeca) {
+  public PrijemPaketa(String oznaka, LocalDateTime vrijemePrijema, String posiljatelj,
+      String primatelj, String vrstaPaketa, double visina, double sirina, double duzina,
+      double tezina, UslugaDostave uslugaDostave, double iznosPouzeca) {
     this.oznaka = oznaka;
     this.vrijemePrijema = vrijemePrijema;
     this.posiljatelj = posiljatelj;
@@ -124,23 +124,6 @@ public class PrijemPaketa {
   public static LocalDateTime konvertirajVrijeme(String vrijeme) {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm:ss");
     return LocalDateTime.parse(vrijeme, formatter);
-  }
-
-  @Override
-  public String toString() {
-      return "PrijemPaketa{" +
-              "oznaka='" + oznaka + '\'' +
-              ", vrijemePrijema=" + vrijemePrijema +
-              ", posiljatelj='" + posiljatelj + '\'' +
-              ", primatelj='" + primatelj + '\'' +
-              ", vrstaPaketa='" + vrstaPaketa + '\'' +
-              ", visina=" + visina +
-              ", sirina=" + sirina +
-              ", duzina=" + duzina +
-              ", tezina=" + tezina +
-              ", uslugaDostave=" + uslugaDostave +
-              ", iznosPouzeca=" + iznosPouzeca +
-              '}';
   }
 
 }

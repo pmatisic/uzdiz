@@ -1,7 +1,7 @@
 package org.foi.uzdiz.pmatisic.zadaca_2.model;
 
 public class VrstaPaketa {
-  
+
   private String oznaka;
   private String opis;
   private double visina;
@@ -105,22 +105,6 @@ public class VrstaPaketa {
 
   public void setCijenaT(double cijenaT) {
     this.cijenaT = cijenaT;
-  }
-
-  @Override
-  public String toString() {
-      return "VrstaPaketa{" +
-              "oznaka='" + oznaka + '\'' +
-              ", opis='" + opis + '\'' +
-              ", visina=" + visina +
-              ", sirina=" + sirina +
-              ", duzina=" + duzina +
-              ", maksimalnaTezina=" + maksimalnaTezina +
-              ", cijena=" + cijena +
-              ", cijenaHitno=" + cijenaHitno +
-              ", cijenaP=" + cijenaP +
-              ", cijenaT=" + cijenaT +
-              '}';
   }
 
 }

@@ -6,30 +6,29 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import org.foi.uzdiz.pmatisic.zadaca_2.builder.Paket;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.UslugaDostave;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Vozilo;
 
 public class UredZaDostavu {
 
+  public static Map<String, LocalDateTime> vrijemePreuzimanjaPaketa = new HashMap<>();
   public static Map<String, String> statusPaketa = new HashMap<>();
   private Queue<Paket> paketiZaDostavu = new LinkedList<>();
   private Map<Vozilo, List<Paket>> ukrcaniPaketi = new HashMap<>();
   private Map<String, Boolean> isporuceniPaketi = new HashMap<>();
-  private List<Vozilo> vozila = new LinkedList<>();;
+  private List<Vozilo> vozila = new LinkedList<>();
   private Map<Vozilo, Double> tezinaVozila = new HashMap<>();
   private Map<Vozilo, Double> volumenVozila = new HashMap<>();
-  private Map<Paket, Double> cijeneDostave = new HashMap<>();
-  private Map<Vozilo, Double> prikupljeniNovac = new HashMap<>();
   private int vrijemeIsporuke;
   private LocalDateTime trenutnoVirtualnoVrijeme;
-  private Map<Paket, LocalDateTime> vrijemeUkrcavanja = new HashMap<>();
-  public static Map<String, LocalDateTime> vrijemePreuzimanjaPaketa = new HashMap<>();
   private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm");
 
   public UredZaDostavu(List<Vozilo> vozila, int vrijemeIsporuke) {
@@ -46,15 +45,11 @@ public class UredZaDostavu {
     return volumenVozila.getOrDefault(vozilo, 0.0);
   }
 
-  public double dohvatiPrikupljeniNovacZaVozilo(Vozilo vozilo) {
-    return prikupljeniNovac.getOrDefault(vozilo, 0.0);
-  }
-
   public void postaviTrenutnoVirtualnoVrijeme(LocalDateTime vrijeme) {
     this.trenutnoVirtualnoVrijeme = vrijeme;
   }
 
-  public void azurirajPaketeIZaDostavu(List<Paket> paketi, Map<Paket, Double> cijene) {
+  public void azurirajPaketeZaDostavu(List<Paket> paketi) {
     if (paketi != null) {
       paketi.sort((p1, p2) -> {
         boolean p1Hitno = p1.getUslugaDostave() == UslugaDostave.H;
@@ -63,7 +58,6 @@ public class UredZaDostavu {
       });
       this.paketiZaDostavu.addAll(paketi);
     }
-    this.cijeneDostave.putAll(cijene);
   }
 
   public void ukrcajPaket() {
@@ -93,7 +87,6 @@ public class UredZaDostavu {
           ukrcaniPaketi.computeIfAbsent(vozilo, k -> new ArrayList<>()).add(paket);
           tezinaVozila.put(vozilo, trenutnaTezina);
           volumenVozila.put(vozilo, trenutniVolumen);
-          vrijemeUkrcavanja.put(paket, trenutnoVirtualnoVrijeme);
           statusPaketa.put(paket.getOznaka(), "Ukrcano");
           isporuceniPaketi.put(paket.getOznaka(), false);
           iterator.remove();
@@ -117,37 +110,37 @@ public class UredZaDostavu {
   public void isporuciPakete(Vozilo vozilo) {
     List<Paket> paketiZaIsporuku =
         new ArrayList<>(ukrcaniPaketi.getOrDefault(vozilo, new ArrayList<>()));
+    Set<Paket> zaUklanjanje = new HashSet<>();
+    LocalDateTime vrijemeSljedeceDostave = vozilo.getVrijemeSljedeceDostave();
 
     if (paketiZaIsporuku.isEmpty())
       return;
 
+    if (vrijemeSljedeceDostave == null
+        || trenutnoVirtualnoVrijeme.isAfter(vrijemeSljedeceDostave)) {
+      vrijemeSljedeceDostave = trenutnoVirtualnoVrijeme;
+    }
+
     System.out.println("U " + trenutnoVirtualnoVrijeme.format(dateTimeFormatter)
         + " dostava je pokrenuta za vozilo " + vozilo.getRegistracija());
 
-    Iterator<Paket> iterator = paketiZaIsporuku.iterator();
-    while (iterator.hasNext()) {
-      Paket paket = iterator.next();
-      LocalDateTime vrijemeUkrcavanjaPaketa = vrijemeUkrcavanja.get(paket);
-      LocalDateTime vrijemeIsporukePaketa = vrijemeUkrcavanjaPaketa.plusMinutes(vrijemeIsporuke);
+    for (Paket paket : paketiZaIsporuku) {
+      String status = statusPaketa.getOrDefault(paket.getOznaka(), "");
 
       if (Boolean.TRUE.equals(isporuceniPaketi.get(paket.getOznaka())))
         continue;
 
-      if (trenutnoVirtualnoVrijeme.isBefore(vrijemeIsporukePaketa))
+      if (!"Ukrcano".equals(status))
         continue;
 
-      System.out.println("U " + vrijemeIsporukePaketa.format(dateTimeFormatter) + " paket "
+      if (trenutnoVirtualnoVrijeme.isBefore(vrijemeSljedeceDostave))
+        continue;
+
+      System.out.println("U " + vrijemeSljedeceDostave.format(dateTimeFormatter) + " paket "
           + paket.getOznaka() + " isporučen primatelju " + paket.getPrimatelj() + " pomoću vozila: "
           + vozilo.getRegistracija());
 
       vrijemePreuzimanjaPaketa.put(paket.getOznaka(), trenutnoVirtualnoVrijeme);
-
-      if (paket.getUslugaDostave() == UslugaDostave.P) {
-        double trenutniNovac = prikupljeniNovac.getOrDefault(vozilo, 0.0);
-        trenutniNovac += paket.getIznosPouzeca();
-        prikupljeniNovac.put(vozilo, trenutniNovac);
-      }
-
       statusPaketa.put(paket.getOznaka(), "Dostavljeno");
       isporuceniPaketi.put(paket.getOznaka(), true);
 
@@ -159,6 +152,23 @@ public class UredZaDostavu {
       tezinaVozila.put(vozilo, trenutnaTezina);
       volumenVozila.put(vozilo, trenutniVolumen);
 
+      vrijemeSljedeceDostave = vrijemeSljedeceDostave.plusMinutes(vrijemeIsporuke);
+      vozilo.setVrijemeSljedeceDostave(vrijemeSljedeceDostave);
+      zaUklanjanje.add(paket);
+    }
+
+    List<Paket> paketiUvozilu = ukrcaniPaketi.getOrDefault(vozilo, new ArrayList<>());
+    if (paketiUvozilu.isEmpty()) {
+      System.out.println("Vozilo je prazno.");
+    } else {
+      for (Paket paket : paketiUvozilu) {
+        System.out.println(
+            "Paket: " + paket.getOznaka() + " - Težina: " + paket.getTezina() + " - Dimenzije: "
+                + paket.getVisina() + "x" + paket.getSirina() + "x" + paket.getDuzina());
+      }
+    }
+
+    for (Paket paket : zaUklanjanje) {
       ukrcaniPaketi.get(vozilo).remove(paket);
     }
 

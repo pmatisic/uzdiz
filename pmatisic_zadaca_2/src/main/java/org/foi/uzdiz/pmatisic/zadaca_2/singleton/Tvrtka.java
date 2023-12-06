@@ -3,12 +3,10 @@ package org.foi.uzdiz.pmatisic.zadaca_2.singleton;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Pattern;
-import org.foi.uzdiz.pmatisic.zadaca_2.builder.Paket;
 import org.foi.uzdiz.pmatisic.zadaca_2.factory.DatotekaFactory;
 import org.foi.uzdiz.pmatisic.zadaca_2.factory.MjestoDatoteka;
 import org.foi.uzdiz.pmatisic.zadaca_2.factory.OsobaDatoteka;
@@ -24,7 +22,6 @@ import org.foi.uzdiz.pmatisic.zadaca_2.model.PrijemPaketa;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Ulica;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Vozilo;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.VrstaPaketa;
-import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.Greske;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.Provjera;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.UredZaDostavu;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.UredZaPrijem;
@@ -123,7 +120,7 @@ public class Tvrtka {
           try {
             uredZaPrijem.ispisTablicePrimljenihPaketa();
           } catch (Exception e) {
-            Greske.logirajGresku(Greske.getRedniBrojGreske(), null, "Nema podataka!");
+            System.out.println("Nema još podataka!");
           }
           break;
         case "Q":
@@ -164,28 +161,10 @@ public class Tvrtka {
     vozila = (List<Vozilo>) ((VoziloDatoteka) citacVozila).dohvatiPodatke();
 
     uredZaPrijem = new UredZaPrijem(vrste, maxTezina);
+
     uredZaPrijem.preuzmiPodatkeIzPrijema(prijemi);
-    uredZaPrijem.postaviVirtualnoVrijeme(virtualnoVrijeme);
 
     uredZaDostavu = new UredZaDostavu(vozila, vrijemeIsporuke);
-    uredZaDostavu.postaviTrenutnoVirtualnoVrijeme(virtualnoVrijeme);
-  }
-
-  private void proslijediPakete() {
-    List<Paket> primljeniPaketi = uredZaPrijem.dohvatiPrimljenePakete();
-    Map<Paket, Double> cijeneDostave = dohvatiCijeneDostave(primljeniPaketi);
-    uredZaDostavu.azurirajPaketeIZaDostavu(primljeniPaketi, cijeneDostave);
-  }
-
-  private Map<Paket, Double> dohvatiCijeneDostave(List<Paket> paketi) {
-    Map<Paket, Double> cijene = new HashMap<>();
-    for (Paket paket : paketi) {
-      Double cijena = uredZaPrijem.dohvatiCijenuDostave(paket);
-      if (cijena != null) {
-        cijene.put(paket, cijena);
-      }
-    }
-    return cijene;
   }
 
   private void izvrsiVirtualnoVrijeme(String unos) {
@@ -222,7 +201,8 @@ public class Tvrtka {
     uredZaPrijem.postaviVirtualnoVrijeme(virtualnoVrijeme);
     uredZaDostavu.postaviTrenutnoVirtualnoVrijeme(virtualnoVrijeme);
 
-    proslijediPakete();
+    var primljeniPaketi = uredZaPrijem.dohvatiPrimljenePakete();
+    uredZaDostavu.azurirajPaketeZaDostavu(primljeniPaketi);
 
     uredZaDostavu.ukrcajPaket();
   }

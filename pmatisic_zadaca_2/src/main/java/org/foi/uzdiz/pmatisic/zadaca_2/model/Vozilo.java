@@ -1,5 +1,7 @@
 package org.foi.uzdiz.pmatisic.zadaca_2.model;
 
+import java.time.LocalDateTime;
+
 public class Vozilo {
 
   private String registracija;
@@ -10,9 +12,11 @@ public class Vozilo {
   private double prosjecnaBrzina;
   private String podrucjaPoRangu;
   private StatusVozila status;
+  private LocalDateTime vrijemeSljedeceDostave;
 
   public Vozilo(String registracija, String opis, double kapacitetTezine, double kapacitetProstora,
-      int redoslijed, double prosjecnaBrzina, String podrucjaPoRangu, StatusVozila status) {
+      int redoslijed, double prosjecnaBrzina, String podrucjaPoRangu, StatusVozila status,
+      LocalDateTime vrijemeSljedeceDostave) {
     this.registracija = registracija;
     this.opis = opis;
     this.kapacitetTezine = kapacitetTezine;
@@ -21,6 +25,7 @@ public class Vozilo {
     this.prosjecnaBrzina = prosjecnaBrzina;
     this.podrucjaPoRangu = podrucjaPoRangu;
     this.status = status;
+    this.vrijemeSljedeceDostave = vrijemeSljedeceDostave;
   }
 
   public String getRegistracija() {
@@ -54,6 +59,10 @@ public class Vozilo {
   public StatusVozila getStatus() {
     return status;
   }
+  
+  public LocalDateTime getVrijemeSljedeceDostave() {
+    return vrijemeSljedeceDostave;
+  }
 
   public void setRegistracija(String registracija) {
     this.registracija = registracija;
@@ -86,6 +95,10 @@ public class Vozilo {
   public void setStatus(StatusVozila status) {
     this.status = status;
   }
+  
+  public void setVrijemeSljedeceDostave(LocalDateTime vrijemeSljedeceDostave) {
+    this.vrijemeSljedeceDostave = vrijemeSljedeceDostave;
+  }
 
   @Override
   public String toString() {
@@ -98,6 +111,7 @@ public class Vozilo {
               ", prosjecnaBrzina=" + prosjecnaBrzina +
               ", podrucjaPoRangu='" + podrucjaPoRangu + '\'' +
               ", status=" + status +
+              ", vrijemeSljedeceDostave=" + vrijemeSljedeceDostave +
               '}';
   }
 
