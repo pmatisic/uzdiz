@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -17,154 +18,153 @@ import org.foi.uzdiz.pmatisic.zadaca_2.model.Vozilo;
 public class UredZaDostavu {
 
   public static Map<String, String> statusPaketa = new HashMap<>();
+  private Queue<Paket> paketiZaDostavu = new LinkedList<>();
+  private Map<Vozilo, List<Paket>> ukrcaniPaketi = new HashMap<>();
+  private Map<String, Boolean> isporuceniPaketi = new HashMap<>();
+  private List<Vozilo> vozila = new LinkedList<>();;
+  private Map<Vozilo, Double> tezinaVozila = new HashMap<>();
+  private Map<Vozilo, Double> volumenVozila = new HashMap<>();
+  private Map<Paket, Double> cijeneDostave = new HashMap<>();
+  private Map<Vozilo, Double> prikupljeniNovac = new HashMap<>();
   private int vrijemeIsporuke;
   private LocalDateTime trenutnoVirtualnoVrijeme;
-  private Queue<Paket> paketiZaDostavu;
-  private List<Vozilo> vozila;
-  private Map<Paket, Long> vrijemeUkrcavanja = new HashMap<>();
-  private Map<Paket, Double> cijeneDostave = new HashMap<>();
-  private Map<Vozilo, Double> kapacitetTezineVozila = new HashMap<>();
-  private Map<Vozilo, Double> kapacitetVolumenaVozila = new HashMap<>();
-  private Map<Vozilo, Double> prikupljeniNovacPoVozilu = new HashMap<>();
-  private Map<Vozilo, List<Paket>> ukrcaniPaketi = new HashMap<>();
+  private Map<Paket, LocalDateTime> vrijemeUkrcavanja = new HashMap<>();
+  public static Map<String, LocalDateTime> vrijemePreuzimanjaPaketa = new HashMap<>();
   private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm");
 
-  public UredZaDostavu(List<Vozilo> vozila, int vrijemeIsporuke, List<Paket> paketi,
-      Map<Paket, Double> cijene) {
-    if (vozila != null) {
-      this.vozila = vozila;
-      Collections.sort(this.vozila, Comparator.comparing(Vozilo::getRedoslijed));
-    } else {
-      this.vozila = new ArrayList<>();
-    }
-
-    if (paketi != null) {
-      List<Paket> sortiranaLista = new ArrayList<>(paketi);
-      Collections.sort(sortiranaLista, new Comparator<Paket>() {
-        @Override
-        public int compare(Paket p1, Paket p2) {
-          boolean p1Hitno = p1.getUslugaDostave() == UslugaDostave.H;
-          boolean p2Hitno = p2.getUslugaDostave() == UslugaDostave.H;
-          return Boolean.compare(p2Hitno, p1Hitno);
-        }
-      });
-      this.paketiZaDostavu = new LinkedList<>(sortiranaLista);
-    } else {
-      this.paketiZaDostavu = new LinkedList<>();
-    }
-
+  public UredZaDostavu(List<Vozilo> vozila, int vrijemeIsporuke) {
+    this.vozila = vozila;
+    Collections.sort(this.vozila, Comparator.comparing(Vozilo::getRedoslijed));
     this.vrijemeIsporuke = vrijemeIsporuke;
-    this.cijeneDostave = (cijene != null) ? new HashMap<>(cijene) : new HashMap<>();
   }
 
   public double dohvatiTrenutnuTezinuVozila(Vozilo vozilo) {
-    return kapacitetTezineVozila.getOrDefault(vozilo, 0.0);
+    return tezinaVozila.getOrDefault(vozilo, 0.0);
   }
 
   public double dohvatiTrenutniVolumenVozila(Vozilo vozilo) {
-    return kapacitetVolumenaVozila.getOrDefault(vozilo, 0.0);
+    return volumenVozila.getOrDefault(vozilo, 0.0);
   }
 
   public double dohvatiPrikupljeniNovacZaVozilo(Vozilo vozilo) {
-    return prikupljeniNovacPoVozilu.getOrDefault(vozilo, 0.0);
+    return prikupljeniNovac.getOrDefault(vozilo, 0.0);
   }
 
   public void postaviTrenutnoVirtualnoVrijeme(LocalDateTime vrijeme) {
     this.trenutnoVirtualnoVrijeme = vrijeme;
   }
 
-  public void ukrcavanjePaketa() {
+  public void azurirajPaketeIZaDostavu(List<Paket> paketi, Map<Paket, Double> cijene) {
+    if (paketi != null) {
+      paketi.sort((p1, p2) -> {
+        boolean p1Hitno = p1.getUslugaDostave() == UslugaDostave.H;
+        boolean p2Hitno = p2.getUslugaDostave() == UslugaDostave.H;
+        return Boolean.compare(p2Hitno, p1Hitno);
+      });
+      this.paketiZaDostavu.addAll(paketi);
+    }
+    this.cijeneDostave.putAll(cijene);
+  }
+
+  public void ukrcajPaket() {
     Queue<Paket> preostaliPaketi = new LinkedList<>(paketiZaDostavu);
+    LocalDateTime vrijemePrvogUkrcaja = null;
 
     for (Vozilo vozilo : vozila) {
-      double trenutnaTezina = 0;
-      double trenutniVolumen = 0;
+      double trenutnaTezina = dohvatiTrenutnuTezinuVozila(vozilo);
+      double trenutniVolumen = dohvatiTrenutniVolumenVozila(vozilo);
+      boolean voziloAktivirano = false;
 
-      while (!preostaliPaketi.isEmpty()) {
-        Paket paket = preostaliPaketi.peek();
-
+      Iterator<Paket> iterator = preostaliPaketi.iterator();
+      while (iterator.hasNext()) {
+        Paket paket = iterator.next();
         double novaTezina = trenutnaTezina + paket.getTezina();
         double noviVolumen =
             trenutniVolumen + paket.getVisina() * paket.getSirina() * paket.getDuzina();
 
         if (novaTezina <= vozilo.getKapacitetTezine()
             && noviVolumen <= vozilo.getKapacitetProstora()) {
+          if (vrijemePrvogUkrcaja == null) {
+            vrijemePrvogUkrcaja = trenutnoVirtualnoVrijeme;
+          }
+
           trenutnaTezina = novaTezina;
           trenutniVolumen = noviVolumen;
           ukrcaniPaketi.computeIfAbsent(vozilo, k -> new ArrayList<>()).add(paket);
-          vrijemeUkrcavanja.put(paket,
-              trenutnoVirtualnoVrijeme.toEpochSecond(java.time.ZoneOffset.UTC));
-          System.out.println("U " + trenutnoVirtualnoVrijeme.format(dateTimeFormatter) + " paket "
-              + paket.getOznaka() + " je ukrcan u vozilo " + vozilo.getRegistracija());
-          preostaliPaketi.poll();
-        } else {
-          break;
+          tezinaVozila.put(vozilo, trenutnaTezina);
+          volumenVozila.put(vozilo, trenutniVolumen);
+          vrijemeUkrcavanja.put(paket, trenutnoVirtualnoVrijeme);
+          statusPaketa.put(paket.getOznaka(), "Ukrcano");
+          isporuceniPaketi.put(paket.getOznaka(), false);
+          iterator.remove();
+          voziloAktivirano = true;
         }
       }
+
+      boolean ispunjenKapacitet = (trenutnaTezina >= vozilo.getKapacitetTezine() * 0.5)
+          || (trenutniVolumen >= vozilo.getKapacitetProstora() * 0.5);
+      boolean protekaoSat = vrijemePrvogUkrcaja != null
+          && trenutnoVirtualnoVrijeme.isAfter(vrijemePrvogUkrcaja.plusHours(1));
+
+      if (voziloAktivirano && (ispunjenKapacitet || protekaoSat)) {
+        isporuciPakete(vozilo);
+      }
     }
+
     paketiZaDostavu = preostaliPaketi;
   }
 
-  public void isporukaPaketa() {
-    for (Map.Entry<Vozilo, List<Paket>> entry : ukrcaniPaketi.entrySet()) {
-      Vozilo vozilo = entry.getKey();
-      List<Paket> paketi = new ArrayList<>(entry.getValue());
+  public void isporuciPakete(Vozilo vozilo) {
+    List<Paket> paketiZaIsporuku =
+        new ArrayList<>(ukrcaniPaketi.getOrDefault(vozilo, new ArrayList<>()));
 
-      if (paketi.isEmpty()) {
+    if (paketiZaIsporuku.isEmpty())
+      return;
+
+    System.out.println("U " + trenutnoVirtualnoVrijeme.format(dateTimeFormatter)
+        + " dostava je pokrenuta za vozilo " + vozilo.getRegistracija());
+
+    Iterator<Paket> iterator = paketiZaIsporuku.iterator();
+    while (iterator.hasNext()) {
+      Paket paket = iterator.next();
+      LocalDateTime vrijemeUkrcavanjaPaketa = vrijemeUkrcavanja.get(paket);
+      LocalDateTime vrijemeIsporukePaketa = vrijemeUkrcavanjaPaketa.plusMinutes(vrijemeIsporuke);
+
+      if (Boolean.TRUE.equals(isporuceniPaketi.get(paket.getOznaka())))
         continue;
+
+      if (trenutnoVirtualnoVrijeme.isBefore(vrijemeIsporukePaketa))
+        continue;
+
+      System.out.println("U " + vrijemeIsporukePaketa.format(dateTimeFormatter) + " paket "
+          + paket.getOznaka() + " isporučen primatelju " + paket.getPrimatelj() + " pomoću vozila: "
+          + vozilo.getRegistracija());
+
+      vrijemePreuzimanjaPaketa.put(paket.getOznaka(), trenutnoVirtualnoVrijeme);
+
+      if (paket.getUslugaDostave() == UslugaDostave.P) {
+        double trenutniNovac = prikupljeniNovac.getOrDefault(vozilo, 0.0);
+        trenutniNovac += paket.getIznosPouzeca();
+        prikupljeniNovac.put(vozilo, trenutniNovac);
       }
 
-      System.out.println("U " + trenutnoVirtualnoVrijeme.format(dateTimeFormatter)
-          + " dostava je pokrenuta za vozilo " + vozilo.getRegistracija());
+      statusPaketa.put(paket.getOznaka(), "Dostavljeno");
+      isporuceniPaketi.put(paket.getOznaka(), true);
 
-      List<Paket> paketiZaUklanjanje = new ArrayList<>();
+      double trenutnaTezina =
+          tezinaVozila.getOrDefault(vozilo, vozilo.getKapacitetTezine()) - paket.getTezina();
+      double trenutniVolumen = volumenVozila.getOrDefault(vozilo, vozilo.getKapacitetProstora())
+          - (paket.getVisina() * paket.getSirina() * paket.getDuzina());
 
-      double ukupnaTezina = 0;
-      double ukupniVolumen = 0;
-      for (Paket paket : paketi) {
-        ukupnaTezina += paket.getTezina();
-        ukupniVolumen += paket.getVisina() * paket.getSirina() * paket.getDuzina();
-      }
-      double popunjenostTezine = ukupnaTezina / vozilo.getKapacitetTezine();
-      double popunjenostProstora = ukupniVolumen / vozilo.getKapacitetProstora();
+      tezinaVozila.put(vozilo, trenutnaTezina);
+      volumenVozila.put(vozilo, trenutniVolumen);
 
-      for (Paket paket : paketi) {
-        long vrijemeKadaJeUkrcan = vrijemeUkrcavanja.getOrDefault(paket, 0L);
-        long razlika =
-            trenutnoVirtualnoVrijeme.toEpochSecond(java.time.ZoneOffset.UTC) - vrijemeKadaJeUkrcan;
-
-        if (paket.getUslugaDostave() == UslugaDostave.H || razlika >= vrijemeIsporuke * 60
-            || popunjenostTezine >= 0.5 || popunjenostProstora >= 0.5) {
-          isporuci(paket, vozilo);
-          paketiZaUklanjanje.add(paket);
-        }
-      }
-
-      paketi.removeAll(paketiZaUklanjanje);
-      entry.setValue(paketi);
-    }
-  }
-
-  private void isporuci(Paket paket, Vozilo vozilo) {
-    System.out.println("U " + trenutnoVirtualnoVrijeme.format(dateTimeFormatter) + " paket "
-        + paket.getOznaka() + " isporučen primatelju " + paket.getPrimatelj() + " pomoću vozila: "
-        + vozilo.getRegistracija());
-
-    if (paket.getUslugaDostave() == UslugaDostave.P) {
-      double trenutniNovac = prikupljeniNovacPoVozilu.getOrDefault(vozilo, 0.0);
-      double noviIznos = trenutniNovac + cijeneDostave.getOrDefault(paket, 0.0);
-      prikupljeniNovacPoVozilu.put(vozilo, noviIznos);
+      ukrcaniPaketi.get(vozilo).remove(paket);
     }
 
-    statusPaketa.put(paket.getOznaka(), "Dostavljeno");
-
-    double trenutnaTezina =
-        kapacitetTezineVozila.getOrDefault(vozilo, vozilo.getKapacitetTezine()) - paket.getTezina();
-    double trenutniVolumen =
-        kapacitetVolumenaVozila.getOrDefault(vozilo, vozilo.getKapacitetProstora())
-            - paket.getVisina() * paket.getSirina() * paket.getDuzina();
-    kapacitetTezineVozila.put(vozilo, trenutnaTezina);
-    kapacitetVolumenaVozila.put(vozilo, trenutniVolumen);
+    if (ukrcaniPaketi.get(vozilo).isEmpty()) {
+      ukrcaniPaketi.remove(vozilo);
+    }
   }
 
 }

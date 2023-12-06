@@ -6,17 +6,17 @@ import org.foi.uzdiz.pmatisic.zadaca_2.model.UslugaDostave;
 
 public class Paket {
 
-  private final String oznaka;
-  private final LocalDateTime vrijemePrijema;
-  private final String posiljatelj;
-  private final String primatelj;
-  private final String vrstaPaketa;
-  private final double visina;
-  private final double sirina;
-  private final double duzina;
-  private final double tezina;
-  private final UslugaDostave uslugaDostave;
-  private final double iznosPouzeca;
+  private String oznaka;
+  private LocalDateTime vrijemePrijema;
+  private String posiljatelj;
+  private String primatelj;
+  private String vrstaPaketa;
+  private double visina;
+  private double sirina;
+  private double duzina;
+  private double tezina;
+  private UslugaDostave uslugaDostave;
+  private double iznosPouzeca;
 
   Paket(String oznaka, LocalDateTime vrijemePrijema, String posiljatelj, String primatelj,
       String vrstaPaketa, double visina, double sirina, double duzina, double tezina,

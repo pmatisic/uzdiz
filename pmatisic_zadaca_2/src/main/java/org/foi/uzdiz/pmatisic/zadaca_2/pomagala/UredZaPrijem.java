@@ -103,7 +103,7 @@ public class UredZaPrijem {
     return filtriraniPaketi;
   }
 
-  public void ispisTablicePrimljenihPaketa(UredZaDostavu uredZaDostavu) {
+  public void ispisTablicePrimljenihPaketa() {
     System.out.println(
         "+-----------+----------------------+----------------------+----------------------+----------------------+---------------------------+----------------------+----------------------+");
     System.out.println(
@@ -115,9 +115,12 @@ public class UredZaPrijem {
       DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm:ss");
       String statusIsporuke =
           UredZaDostavu.statusPaketa.getOrDefault(paket.getOznaka(), "Na čekanju");
-      String vrijemePreuzimanja = statusIsporuke.equals("Dostavljeno")
-          ? trenutnoVirtualnoVrijeme.format(dateTimeFormatter).toString()
-          : "-";
+      String vrijemePreuzimanja = "-";
+      if (statusIsporuke.equals("Dostavljeno")
+          && UredZaDostavu.vrijemePreuzimanjaPaketa.containsKey(paket.getOznaka())) {
+        vrijemePreuzimanja =
+            UredZaDostavu.vrijemePreuzimanjaPaketa.get(paket.getOznaka()).format(dateTimeFormatter);
+      }
       Double iznosDostave = mapaCijenaDostave.getOrDefault(paket, 0.0);
       System.out.printf("| %-6s | %-20s | %-20s | %-20s | %-20s | %-25s | %20.2f | %20.2f |\n",
           paket.getOznaka(), paket.getVrijemePrijema().format(dateTimeFormatter),

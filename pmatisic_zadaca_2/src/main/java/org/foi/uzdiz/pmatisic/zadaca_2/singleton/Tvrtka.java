@@ -121,7 +121,7 @@ public class Tvrtka {
       switch (unos) {
         case "IP":
           try {
-            uredZaPrijem.ispisTablicePrimljenihPaketa(uredZaDostavu);
+            uredZaPrijem.ispisTablicePrimljenihPaketa();
           } catch (Exception e) {
             Greske.logirajGresku(Greske.getRedniBrojGreske(), null, "Nema podataka!");
           }
@@ -167,11 +167,14 @@ public class Tvrtka {
     uredZaPrijem.preuzmiPodatkeIzPrijema(prijemi);
     uredZaPrijem.postaviVirtualnoVrijeme(virtualnoVrijeme);
 
+    uredZaDostavu = new UredZaDostavu(vozila, vrijemeIsporuke);
+    uredZaDostavu.postaviTrenutnoVirtualnoVrijeme(virtualnoVrijeme);
+  }
+
+  private void proslijediPakete() {
     List<Paket> primljeniPaketi = uredZaPrijem.dohvatiPrimljenePakete();
     Map<Paket, Double> cijeneDostave = dohvatiCijeneDostave(primljeniPaketi);
-
-    uredZaDostavu = new UredZaDostavu(vozila, vrijemeIsporuke, primljeniPaketi, cijeneDostave);
-    uredZaDostavu.postaviTrenutnoVirtualnoVrijeme(virtualnoVrijeme);
+    uredZaDostavu.azurirajPaketeIZaDostavu(primljeniPaketi, cijeneDostave);
   }
 
   private Map<Paket, Double> dohvatiCijeneDostave(List<Paket> paketi) {
@@ -219,8 +222,9 @@ public class Tvrtka {
     uredZaPrijem.postaviVirtualnoVrijeme(virtualnoVrijeme);
     uredZaDostavu.postaviTrenutnoVirtualnoVrijeme(virtualnoVrijeme);
 
-    uredZaDostavu.ukrcavanjePaketa();
-    uredZaDostavu.isporukaPaketa();
+    proslijediPakete();
+
+    uredZaDostavu.ukrcajPaket();
   }
 
 }
