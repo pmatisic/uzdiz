@@ -197,7 +197,6 @@ public class Tvrtka {
       System.out.println("Izvan radnog vremena!");
       return;
     }
-
     uredZaPrijem.postaviVirtualnoVrijeme(virtualnoVrijeme);
     uredZaDostavu.postaviTrenutnoVirtualnoVrijeme(virtualnoVrijeme);
 

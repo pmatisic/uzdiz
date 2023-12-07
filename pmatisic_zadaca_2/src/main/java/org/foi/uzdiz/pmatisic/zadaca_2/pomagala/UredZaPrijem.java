@@ -17,6 +17,7 @@ public class UredZaPrijem {
   private Map<String, VrstaPaketa> mapaVrstaPaketa = new HashMap<>();
   private Map<Paket, Double> mapaCijenaDostave = new HashMap<>();
   private List<Paket> primljeniPaketi = new ArrayList<>();
+  private List<Paket> zaprimljeniPaketi = new ArrayList<>();
   private LocalDateTime trenutnoVirtualnoVrijeme;
   private int maxTezina;
 
@@ -89,8 +90,10 @@ public class UredZaPrijem {
   public List<Paket> dohvatiPrimljenePakete() {
     List<Paket> filtriraniPaketi = new ArrayList<>();
     for (Paket paket : primljeniPaketi) {
-      if (paket.getVrijemePrijema().isBefore(trenutnoVirtualnoVrijeme)) {
+      if (paket.getVrijemePrijema().isBefore(trenutnoVirtualnoVrijeme)
+          && !paket.isPoslanZaDostavu()) {
         filtriraniPaketi.add(paket);
+        zaprimljeniPaketi.add(paket);
       }
     }
     return filtriraniPaketi;
@@ -104,7 +107,7 @@ public class UredZaPrijem {
     System.out.println(
         "+-----------+----------------------+----------------------+----------------------+----------------------+---------------------------+----------------------+----------------------+");
 
-    for (Paket paket : dohvatiPrimljenePakete()) {
+    for (Paket paket : zaprimljeniPaketi) {
       DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm:ss");
       String statusIsporuke =
           UredZaDostavu.statusPaketa.getOrDefault(paket.getOznaka(), "Na čekanju");

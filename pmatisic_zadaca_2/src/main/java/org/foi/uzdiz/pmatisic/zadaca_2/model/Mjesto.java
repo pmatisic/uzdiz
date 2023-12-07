@@ -39,13 +39,4 @@ public class Mjesto {
     this.ulice = new ArrayList<>(ulice);
   }
 
-  @Override
-  public String toString() {
-      return "Mjesto{" +
-              "id=" + id +
-              ", naziv='" + naziv + '\'' +
-              ", ulice=" + ulice +
-              '}';
-  }
-
 }

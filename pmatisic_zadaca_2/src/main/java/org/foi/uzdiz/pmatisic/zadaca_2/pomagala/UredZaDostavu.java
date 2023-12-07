@@ -3,16 +3,12 @@ package org.foi.uzdiz.pmatisic.zadaca_2.pomagala;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 import org.foi.uzdiz.pmatisic.zadaca_2.builder.Paket;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.UslugaDostave;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Vozilo;
@@ -33,8 +29,11 @@ public class UredZaDostavu {
 
   public UredZaDostavu(List<Vozilo> vozila, int vrijemeIsporuke) {
     this.vozila = vozila;
-    Collections.sort(this.vozila, Comparator.comparing(Vozilo::getRedoslijed));
     this.vrijemeIsporuke = vrijemeIsporuke;
+  }
+
+  public void postaviTrenutnoVirtualnoVrijeme(LocalDateTime vrijeme) {
+    this.trenutnoVirtualnoVrijeme = vrijeme;
   }
 
   public double dohvatiTrenutnuTezinuVozila(Vozilo vozilo) {
@@ -45,10 +44,6 @@ public class UredZaDostavu {
     return volumenVozila.getOrDefault(vozilo, 0.0);
   }
 
-  public void postaviTrenutnoVirtualnoVrijeme(LocalDateTime vrijeme) {
-    this.trenutnoVirtualnoVrijeme = vrijeme;
-  }
-
   public void azurirajPaketeZaDostavu(List<Paket> paketi) {
     if (paketi != null) {
       paketi.sort((p1, p2) -> {
@@ -56,41 +51,50 @@ public class UredZaDostavu {
         boolean p2Hitno = p2.getUslugaDostave() == UslugaDostave.H;
         return Boolean.compare(p2Hitno, p1Hitno);
       });
-      this.paketiZaDostavu.addAll(paketi);
+
+      for (Paket paket : paketi) {
+        if (!paket.isPoslanZaDostavu()) {
+          this.paketiZaDostavu.add(paket);
+          paket.setPoslanZaDostavu(true);
+        }
+      }
     }
   }
 
   public void ukrcajPaket() {
-    Queue<Paket> preostaliPaketi = new LinkedList<>(paketiZaDostavu);
-    LocalDateTime vrijemePrvogUkrcaja = null;
-
     for (Vozilo vozilo : vozila) {
+      if (!vozilo.jeSlobodno()) {
+        continue;
+      }
       double trenutnaTezina = dohvatiTrenutnuTezinuVozila(vozilo);
       double trenutniVolumen = dohvatiTrenutniVolumenVozila(vozilo);
-      boolean voziloAktivirano = false;
+      boolean imaHitnihPaketa = false;
+      LocalDateTime vrijemePrvogUkrcaja = null;
 
-      Iterator<Paket> iterator = preostaliPaketi.iterator();
+      Iterator<Paket> iterator = paketiZaDostavu.iterator();
       while (iterator.hasNext()) {
         Paket paket = iterator.next();
-        double novaTezina = trenutnaTezina + paket.getTezina();
-        double noviVolumen =
-            trenutniVolumen + paket.getVisina() * paket.getSirina() * paket.getDuzina();
+        if (paket.getUslugaDostave() == UslugaDostave.H) {
+          imaHitnihPaketa = true;
+        }
 
-        if (novaTezina <= vozilo.getKapacitetTezine()
-            && noviVolumen <= vozilo.getKapacitetProstora()) {
+        trenutnaTezina += paket.getTezina();
+        trenutniVolumen += paket.getVisina() * paket.getSirina() * paket.getDuzina();
+        if (trenutnaTezina <= vozilo.getKapacitetTezine()
+            && trenutniVolumen <= vozilo.getKapacitetProstora()) {
           if (vrijemePrvogUkrcaja == null) {
             vrijemePrvogUkrcaja = trenutnoVirtualnoVrijeme;
           }
 
-          trenutnaTezina = novaTezina;
-          trenutniVolumen = noviVolumen;
-          ukrcaniPaketi.computeIfAbsent(vozilo, k -> new ArrayList<>()).add(paket);
           tezinaVozila.put(vozilo, trenutnaTezina);
           volumenVozila.put(vozilo, trenutniVolumen);
+
+          ukrcaniPaketi.computeIfAbsent(vozilo, k -> new ArrayList<>()).add(paket);
           statusPaketa.put(paket.getOznaka(), "Ukrcano");
+          System.out
+              .println("Paket " + paket.getOznaka() + " je ukrcan na " + vozilo.getRegistracija());
           isporuceniPaketi.put(paket.getOznaka(), false);
           iterator.remove();
-          voziloAktivirano = true;
         }
       }
 
@@ -99,80 +103,54 @@ public class UredZaDostavu {
       boolean protekaoSat = vrijemePrvogUkrcaja != null
           && trenutnoVirtualnoVrijeme.isAfter(vrijemePrvogUkrcaja.plusHours(1));
 
-      if (voziloAktivirano && (ispunjenKapacitet || protekaoSat)) {
-        isporuciPakete(vozilo);
+      if ((imaHitnihPaketa || ispunjenKapacitet || protekaoSat)
+          && !ukrcaniPaketi.getOrDefault(vozilo, new ArrayList<>()).isEmpty()) {
+        vozilo.setSlobodno(false);
+        isporuciPaket(vozilo);
+        vrijemePrvogUkrcaja = null;
+        tezinaVozila.put(vozilo, 0.0);
+        volumenVozila.put(vozilo, 0.0);
       }
     }
-
-    paketiZaDostavu = preostaliPaketi;
   }
 
-  public void isporuciPakete(Vozilo vozilo) {
-    List<Paket> paketiZaIsporuku =
-        new ArrayList<>(ukrcaniPaketi.getOrDefault(vozilo, new ArrayList<>()));
-    Set<Paket> zaUklanjanje = new HashSet<>();
-    LocalDateTime vrijemeSljedeceDostave = vozilo.getVrijemeSljedeceDostave();
-
+  public void isporuciPaket(Vozilo vozilo) {
+    List<Paket> paketiZaIsporuku = ukrcaniPaketi.getOrDefault(vozilo, new ArrayList<>());
     if (paketiZaIsporuku.isEmpty())
       return;
 
-    if (vrijemeSljedeceDostave == null
-        || trenutnoVirtualnoVrijeme.isAfter(vrijemeSljedeceDostave)) {
-      vrijemeSljedeceDostave = trenutnoVirtualnoVrijeme;
-    }
+    LocalDateTime vrijemeSljedeceDostave = vozilo.getVrijemeSljedeceDostave();
+    vrijemeSljedeceDostave = trenutnoVirtualnoVrijeme.plusMinutes(vrijemeIsporuke);
 
     System.out.println("U " + trenutnoVirtualnoVrijeme.format(dateTimeFormatter)
         + " dostava je pokrenuta za vozilo " + vozilo.getRegistracija());
 
-    for (Paket paket : paketiZaIsporuku) {
+    Iterator<Paket> iterator = paketiZaIsporuku.iterator();
+    while (iterator.hasNext()) {
+      Paket paket = iterator.next();
       String status = statusPaketa.getOrDefault(paket.getOznaka(), "");
 
-      if (Boolean.TRUE.equals(isporuceniPaketi.get(paket.getOznaka())))
+      if (Boolean.TRUE.equals(isporuceniPaketi.get(paket.getOznaka()))
+          || !"Ukrcano".equals(status)) {
         continue;
-
-      if (!"Ukrcano".equals(status))
-        continue;
-
-      if (trenutnoVirtualnoVrijeme.isBefore(vrijemeSljedeceDostave))
-        continue;
+      }
 
       System.out.println("U " + vrijemeSljedeceDostave.format(dateTimeFormatter) + " paket "
           + paket.getOznaka() + " isporučen primatelju " + paket.getPrimatelj() + " pomoću vozila: "
           + vozilo.getRegistracija());
 
-      vrijemePreuzimanjaPaketa.put(paket.getOznaka(), trenutnoVirtualnoVrijeme);
+      vrijemePreuzimanjaPaketa.put(paket.getOznaka(), vrijemeSljedeceDostave);
       statusPaketa.put(paket.getOznaka(), "Dostavljeno");
       isporuceniPaketi.put(paket.getOznaka(), true);
-
-      double trenutnaTezina =
-          tezinaVozila.getOrDefault(vozilo, vozilo.getKapacitetTezine()) - paket.getTezina();
-      double trenutniVolumen = volumenVozila.getOrDefault(vozilo, vozilo.getKapacitetProstora())
-          - (paket.getVisina() * paket.getSirina() * paket.getDuzina());
-
-      tezinaVozila.put(vozilo, trenutnaTezina);
-      volumenVozila.put(vozilo, trenutniVolumen);
+      vozilo.setSlobodno(true);
 
       vrijemeSljedeceDostave = vrijemeSljedeceDostave.plusMinutes(vrijemeIsporuke);
       vozilo.setVrijemeSljedeceDostave(vrijemeSljedeceDostave);
-      zaUklanjanje.add(paket);
+
+      iterator.remove();
     }
 
-    List<Paket> paketiUvozilu = ukrcaniPaketi.getOrDefault(vozilo, new ArrayList<>());
-    if (paketiUvozilu.isEmpty()) {
-      System.out.println("Vozilo je prazno.");
-    } else {
-      for (Paket paket : paketiUvozilu) {
-        System.out.println(
-            "Paket: " + paket.getOznaka() + " - Težina: " + paket.getTezina() + " - Dimenzije: "
-                + paket.getVisina() + "x" + paket.getSirina() + "x" + paket.getDuzina());
-      }
-    }
-
-    for (Paket paket : zaUklanjanje) {
-      ukrcaniPaketi.get(vozilo).remove(paket);
-    }
-
-    if (ukrcaniPaketi.get(vozilo).isEmpty()) {
+    if (paketiZaIsporuku.isEmpty()) {
       ukrcaniPaketi.remove(vozilo);
     }
   }

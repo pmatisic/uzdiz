@@ -12,11 +12,11 @@ public class Vozilo {
   private double prosjecnaBrzina;
   private String podrucjaPoRangu;
   private StatusVozila status;
-  private LocalDateTime vrijemeSljedeceDostave;
+  private LocalDateTime vrijemeSljedeceDostave = null;
+  private boolean slobodno = true;
 
   public Vozilo(String registracija, String opis, double kapacitetTezine, double kapacitetProstora,
-      int redoslijed, double prosjecnaBrzina, String podrucjaPoRangu, StatusVozila status,
-      LocalDateTime vrijemeSljedeceDostave) {
+      int redoslijed, double prosjecnaBrzina, String podrucjaPoRangu, StatusVozila status) {
     this.registracija = registracija;
     this.opis = opis;
     this.kapacitetTezine = kapacitetTezine;
@@ -25,7 +25,6 @@ public class Vozilo {
     this.prosjecnaBrzina = prosjecnaBrzina;
     this.podrucjaPoRangu = podrucjaPoRangu;
     this.status = status;
-    this.vrijemeSljedeceDostave = vrijemeSljedeceDostave;
   }
 
   public String getRegistracija() {
@@ -59,9 +58,13 @@ public class Vozilo {
   public StatusVozila getStatus() {
     return status;
   }
-  
+
   public LocalDateTime getVrijemeSljedeceDostave() {
     return vrijemeSljedeceDostave;
+  }
+
+  public boolean jeSlobodno() {
+    return slobodno;
   }
 
   public void setRegistracija(String registracija) {
@@ -95,24 +98,13 @@ public class Vozilo {
   public void setStatus(StatusVozila status) {
     this.status = status;
   }
-  
+
   public void setVrijemeSljedeceDostave(LocalDateTime vrijemeSljedeceDostave) {
     this.vrijemeSljedeceDostave = vrijemeSljedeceDostave;
   }
 
-  @Override
-  public String toString() {
-      return "Vozilo{" +
-              "registracija='" + registracija + '\'' +
-              ", opis='" + opis + '\'' +
-              ", kapacitetTezine=" + kapacitetTezine +
-              ", kapacitetProstora=" + kapacitetProstora +
-              ", redoslijed=" + redoslijed +
-              ", prosjecnaBrzina=" + prosjecnaBrzina +
-              ", podrucjaPoRangu='" + podrucjaPoRangu + '\'' +
-              ", status=" + status +
-              ", vrijemeSljedeceDostave=" + vrijemeSljedeceDostave +
-              '}';
+  public void setSlobodno(boolean slobodno) {
+    this.slobodno = slobodno;
   }
 
 }

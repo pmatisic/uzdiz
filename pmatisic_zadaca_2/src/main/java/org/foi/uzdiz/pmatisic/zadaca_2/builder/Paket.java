@@ -17,6 +17,7 @@ public class Paket {
   private final double tezina;
   private final UslugaDostave uslugaDostave;
   private final double iznosPouzeca;
+  private boolean poslanZaDostavu = false;
 
   Paket(String oznaka, LocalDateTime vrijemePrijema, String posiljatelj, String primatelj,
       String vrstaPaketa, double visina, double sirina, double duzina, double tezina,
@@ -78,25 +79,33 @@ public class Paket {
     return iznosPouzeca;
   }
 
+  public boolean isPoslanZaDostavu() {
+    return poslanZaDostavu;
+  }
+
+  public void setPoslanZaDostavu(boolean poslanZaDostavu) {
+    this.poslanZaDostavu = poslanZaDostavu;
+  }
+
   public static LocalDateTime konvertirajVrijeme(String vrijeme) {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm:ss");
     return LocalDateTime.parse(vrijeme, formatter);
   }
-  
+
   @Override
   public String toString() {
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm:ss");
-    return "Paket[" +
-           "Oznaka='" + oznaka + '\'' +
-           ", VrijemePrijema=" + vrijemePrijema.format(formatter) +
-           ", Posiljatelj='" + posiljatelj + '\'' +
-           ", Primatelj='" + primatelj + '\'' +
-           ", VrstaPaketa='" + vrstaPaketa + '\'' +
-           ", Dimenzije=" + visina + "x" + sirina + "x" + duzina +
-           ", Tezina=" + tezina +
-           ", UslugaDostave=" + (uslugaDostave != null ? uslugaDostave.toString() : "N/A") +
-           ", IznosPouzeca=" + iznosPouzeca +
-           ']';
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm:ss");
+      return "Paket[" +
+             "Oznaka='" + oznaka + '\'' +
+             ", VrijemePrijema=" + vrijemePrijema.format(formatter) +
+             ", Pošiljatelj='" + posiljatelj + '\'' +
+             ", Primatelj='" + primatelj + '\'' +
+             ", VrstaPaketa='" + vrstaPaketa + '\'' +
+             ", Dimenzije=" + visina + "x" + sirina + "x" + duzina +
+             ", Težina=" + tezina +
+             ", UslugaDostave=" + (uslugaDostave != null ? uslugaDostave.toString() : "N/A") +
+             ", IznosPouzeća=" + iznosPouzeca +
+             ']';
   }
 
 }

@@ -77,17 +77,4 @@ public class Ulica {
     this.najveciKucniBroj = najveciKucniBroj;
   }
 
-  @Override
-  public String toString() {
-      return "Ulica{" +
-              "id=" + id +
-              ", naziv='" + naziv + '\'' +
-              ", gpsLat1=" + gpsLat1 +
-              ", gpsLon1=" + gpsLon1 +
-              ", gpsLat2=" + gpsLat2 +
-              ", gpsLon2=" + gpsLon2 +
-              ", najveciKucniBroj=" + najveciKucniBroj +
-              '}';
-  }
-
 }

@@ -74,7 +74,7 @@ public class VoziloDatoteka implements Datoteka<Vozilo> {
           StatusVozila status = StatusVozila.valueOf(statusString);
 
           Vozilo vozilo = new Vozilo(dijelovi[0], dijelovi[1], kapacitetTezine, kapacitetProstora,
-              redoslijed, prosjecnaBrzina, podrucjaPoRangu, status, null);
+              redoslijed, prosjecnaBrzina, podrucjaPoRangu, status);
           vozila.add(vozilo);
         } catch (NumberFormatException e) {
           Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, linija,

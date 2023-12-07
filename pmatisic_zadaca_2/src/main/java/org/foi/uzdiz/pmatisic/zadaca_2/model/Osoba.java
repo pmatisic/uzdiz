@@ -46,14 +46,4 @@ public class Osoba {
     this.kucniBroj = kucniBroj;
   }
 
-  @Override
-  public String toString() {
-      return "Osoba{" +
-              "ime='" + ime + '\'' +
-              ", gradId=" + gradId +
-              ", ulicaId=" + ulicaId +
-              ", kucniBroj=" + kucniBroj +
-              '}';
-  }
-
 }

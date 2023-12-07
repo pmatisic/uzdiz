@@ -29,15 +29,8 @@ public class Podrucje {
     this.gradUlicaParovi = new ArrayList<>(gradUlicaParovi);
   }
 
-  @Override
-  public String toString() {
-      return "Podrucje{" +
-              "id=" + id +
-              ", gradUlicaParovi=" + gradUlicaParovi +
-              '}';
-  }
-
   public static class Par<T1, T2> {
+
     private T1 prvi;
     private T2 drugi;
 
@@ -54,10 +47,6 @@ public class Podrucje {
       return drugi;
     }
 
-    @Override
-    public String toString() {
-      return "(" + prvi + ", " + drugi + ")";
-    }
   }
 
 }
