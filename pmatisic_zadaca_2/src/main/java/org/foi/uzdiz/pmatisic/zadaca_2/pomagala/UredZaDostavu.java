@@ -25,6 +25,7 @@ public class UredZaDostavu {
   private Map<Vozilo, Double> volumenVozila = new HashMap<>();
   private int vrijemeIsporuke;
   private LocalDateTime trenutnoVirtualnoVrijeme;
+  private LocalDateTime sljedeciPuniSat;
   private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm");
 
   public UredZaDostavu(List<Vozilo> vozila, int vrijemeIsporuke) {
@@ -34,6 +35,20 @@ public class UredZaDostavu {
 
   public void postaviTrenutnoVirtualnoVrijeme(LocalDateTime vrijeme) {
     this.trenutnoVirtualnoVrijeme = vrijeme;
+    izracunajVrijemeDoPunogSata();
+  }
+
+  private void izracunajVrijemeDoPunogSata() {
+    int minuteDoPunogSata = 60 - trenutnoVirtualnoVrijeme.getMinute();
+    if (minuteDoPunogSata == 60)
+      minuteDoPunogSata = 0;
+
+    sljedeciPuniSat =
+        trenutnoVirtualnoVrijeme.plusMinutes(minuteDoPunogSata).withSecond(0).withNano(0);
+  }
+
+  public boolean jeNaPunomSatu() {
+    return trenutnoVirtualnoVrijeme.isEqual(sljedeciPuniSat);
   }
 
   public double dohvatiTrenutnuTezinuVozila(Vozilo vozilo) {
@@ -53,7 +68,7 @@ public class UredZaDostavu {
       });
 
       for (Paket paket : paketi) {
-        if (!paket.isPoslanZaDostavu()) {
+        if (!paket.jePoslanZaDostavu()) {
           this.paketiZaDostavu.add(paket);
           paket.setPoslanZaDostavu(true);
         }
@@ -69,7 +84,6 @@ public class UredZaDostavu {
       double trenutnaTezina = dohvatiTrenutnuTezinuVozila(vozilo);
       double trenutniVolumen = dohvatiTrenutniVolumenVozila(vozilo);
       boolean imaHitnihPaketa = false;
-      LocalDateTime vrijemePrvogUkrcaja = null;
 
       Iterator<Paket> iterator = paketiZaDostavu.iterator();
       while (iterator.hasNext()) {
@@ -82,9 +96,6 @@ public class UredZaDostavu {
         trenutniVolumen += paket.getVisina() * paket.getSirina() * paket.getDuzina();
         if (trenutnaTezina <= vozilo.getKapacitetTezine()
             && trenutniVolumen <= vozilo.getKapacitetProstora()) {
-          if (vrijemePrvogUkrcaja == null) {
-            vrijemePrvogUkrcaja = trenutnoVirtualnoVrijeme;
-          }
 
           tezinaVozila.put(vozilo, trenutnaTezina);
           volumenVozila.put(vozilo, trenutniVolumen);
@@ -100,14 +111,10 @@ public class UredZaDostavu {
 
       boolean ispunjenKapacitet = (trenutnaTezina >= vozilo.getKapacitetTezine() * 0.5)
           || (trenutniVolumen >= vozilo.getKapacitetProstora() * 0.5);
-      boolean protekaoSat = vrijemePrvogUkrcaja != null
-          && trenutnoVirtualnoVrijeme.isAfter(vrijemePrvogUkrcaja.plusHours(1));
-
-      if ((imaHitnihPaketa || ispunjenKapacitet || protekaoSat)
+      if ((imaHitnihPaketa || ispunjenKapacitet || jeNaPunomSatu())
           && !ukrcaniPaketi.getOrDefault(vozilo, new ArrayList<>()).isEmpty()) {
         vozilo.setSlobodno(false);
         isporuciPaket(vozilo);
-        vrijemePrvogUkrcaja = null;
         tezinaVozila.put(vozilo, 0.0);
         volumenVozila.put(vozilo, 0.0);
       }

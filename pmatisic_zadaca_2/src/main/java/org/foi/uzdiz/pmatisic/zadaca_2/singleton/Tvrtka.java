@@ -6,7 +6,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.foi.uzdiz.pmatisic.zadaca_2.builder.Paket;
 import org.foi.uzdiz.pmatisic.zadaca_2.factory.DatotekaFactory;
 import org.foi.uzdiz.pmatisic.zadaca_2.factory.MjestoDatoteka;
 import org.foi.uzdiz.pmatisic.zadaca_2.factory.OsobaDatoteka;
@@ -22,6 +24,8 @@ import org.foi.uzdiz.pmatisic.zadaca_2.model.PrijemPaketa;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Ulica;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Vozilo;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.VrstaPaketa;
+import org.foi.uzdiz.pmatisic.zadaca_2.observer.ServisObavijesti;
+import org.foi.uzdiz.pmatisic.zadaca_2.observer.Slusac;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.Provjera;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.UredZaDostavu;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.UredZaPrijem;
@@ -31,6 +35,7 @@ public class Tvrtka {
   private static volatile Tvrtka instance;
   private UredZaPrijem uredZaPrijem;
   private UredZaDostavu uredZaDostavu;
+  private ServisObavijesti servisObavijesti;
   private Object citacVrstaPaketa = new VrstaPaketaDatoteka();
   private Object citacVozila = new VoziloDatoteka();
   private Object citacPrijemaPaketa = new PrijemPaketaDatoteka();
@@ -38,6 +43,7 @@ public class Tvrtka {
   private Object citacMjesta = new MjestoDatoteka();
   private Object citacUlica = new UlicaDatoteka();
   private Object citacPodrucja = new PodrucjeDatoteka();
+  private List<Paket> paketiZaObavijesti;
   private List<VrstaPaketa> vrste;
   private List<Vozilo> vozila;
   private List<PrijemPaketa> prijemi;
@@ -65,6 +71,7 @@ public class Tvrtka {
     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
     this.pocetakRada = LocalTime.parse(podatci.get("pr"), timeFormatter);
     this.krajRada = LocalTime.parse(podatci.get("kr"), timeFormatter);
+    this.servisObavijesti = new ServisObavijesti();
   }
 
   public static Tvrtka getInstance(Map<String, String> noviPodatci) {
@@ -115,24 +122,16 @@ public class Tvrtka {
     do {
       System.out.println("Unesite komandu:");
       unos = scanner.nextLine().trim();
-      switch (unos) {
-        case "IP":
-          try {
-            uredZaPrijem.ispisTablicePrimljenihPaketa();
-          } catch (Exception e) {
-            System.out.println("Nema još podataka!");
-          }
-          break;
-        case "Q":
-          System.out.println("Izlazak iz programa.");
-          break;
-        default:
-          if (unos.startsWith("VR ")) {
-            izvrsiVirtualnoVrijeme(unos);
-          } else {
-            System.out.println("Pogrešan unos!");
-          }
-          break;
+      if (unos.startsWith("IP")) {
+        uredZaPrijem.ispisTablicePrimljenihPaketa();
+      } else if (unos.startsWith("VR")) {
+        izvrsiVirtualnoVrijeme(unos);
+      } else if (unos.startsWith("PO")) {
+        promijeniStatusObavijesti(unos);
+      } else if (unos.equals("Q")) {
+        System.out.println("Izlazak iz programa.");
+      } else {
+        System.out.println("Pogrešan unos!");
       }
     } while (!unos.equals("Q"));
     scanner.close();
@@ -156,13 +155,21 @@ public class Tvrtka {
   }
 
   public void inicijaliziraj() {
-    prijemi = (List<PrijemPaketa>) ((PrijemPaketaDatoteka) citacPrijemaPaketa).dohvatiPodatke();
     vrste = (List<VrstaPaketa>) ((VrstaPaketaDatoteka) citacVrstaPaketa).dohvatiPodatke();
     vozila = (List<Vozilo>) ((VoziloDatoteka) citacVozila).dohvatiPodatke();
+    prijemi = (List<PrijemPaketa>) ((PrijemPaketaDatoteka) citacPrijemaPaketa).dohvatiPodatke();
+    osobe = (List<Osoba>) ((OsobaDatoteka) citacOsoba).dohvatiPodatke();
+    mjesta = (List<Mjesto>) ((MjestoDatoteka) citacMjesta).dohvatiPodatke();
+    ulice = (List<Ulica>) ((UlicaDatoteka) citacUlica).dohvatiPodatke();
+    podrucja = (List<Podrucje>) ((PodrucjeDatoteka) citacPodrucja).dohvatiPodatke();
 
     uredZaPrijem = new UredZaPrijem(vrste, maxTezina);
 
     uredZaPrijem.preuzmiPodatkeIzPrijema(prijemi);
+
+    paketiZaObavijesti = uredZaPrijem.dohvatiPaketeZaObavijesti();
+
+    servisObavijesti.automatskaPretplata(paketiZaObavijesti);
 
     uredZaDostavu = new UredZaDostavu(vozila, vrijemeIsporuke);
   }
@@ -197,13 +204,52 @@ public class Tvrtka {
       System.out.println("Izvan radnog vremena!");
       return;
     }
+
     uredZaPrijem.postaviVirtualnoVrijeme(virtualnoVrijeme);
     uredZaDostavu.postaviTrenutnoVirtualnoVrijeme(virtualnoVrijeme);
 
     var primljeniPaketi = uredZaPrijem.dohvatiPrimljenePakete();
-    uredZaDostavu.azurirajPaketeZaDostavu(primljeniPaketi);
+    for (Paket paket : primljeniPaketi) {
+      if (paket.getStatusObavijesti() && paket.getVrijemePrijema().isBefore(virtualnoVrijeme)) {
+        System.out.println("Paket " + paket.getOznaka() + " za primatelja " + paket.getPrimatelj()
+            + " je zaprimljen od pošiljatelja " + paket.getPosiljatelj() + ".");
+      }
+    }
 
+    uredZaDostavu.azurirajPaketeZaDostavu(primljeniPaketi);
     uredZaDostavu.ukrcajPaket();
+  }
+
+  private void promijeniStatusObavijesti(String unos) {
+    Pattern pattern =
+        Pattern.compile("PO\\s+'\\s*([\\p{L} .'-]+?)\\s*'\\s+([\\p{L}\\p{N}]+)\\s+(D|N)");
+    Matcher matcher = pattern.matcher(unos);
+
+    if (matcher.matches()) {
+      String osoba = matcher.group(1).trim();
+      String oznaka = matcher.group(2).trim();
+      String status = matcher.group(3).trim();
+      boolean statusObavijesti = status.equals("D");
+      Slusac slusac = servisObavijesti.getOrCreateSlusac(osoba, "", "");
+
+      if (statusObavijesti) {
+        servisObavijesti.subscribe(oznaka, slusac);
+      }
+
+      if (!statusObavijesti) {
+        for (Paket paket : paketiZaObavijesti) {
+          if (paket.getOznaka().equals(oznaka)) {
+            paket.setStatusObavijesti(false);
+            break;
+          }
+        }
+        servisObavijesti.unsubscribe(oznaka, slusac);
+      }
+
+      servisObavijesti.notifyObservers(oznaka, statusObavijesti);
+    } else {
+      System.out.println("Neispravan format naredbe.");
+    }
   }
 
 }

@@ -28,10 +28,6 @@ public class UredZaPrijem {
     }
   }
 
-  public Double dohvatiCijenuDostave(Paket paket) {
-    return this.mapaCijenaDostave.getOrDefault(paket, null);
-  }
-
   public void postaviVirtualnoVrijeme(LocalDateTime vrijeme) {
     this.trenutnoVirtualnoVrijeme = vrijeme;
   }
@@ -91,10 +87,18 @@ public class UredZaPrijem {
     List<Paket> filtriraniPaketi = new ArrayList<>();
     for (Paket paket : primljeniPaketi) {
       if (paket.getVrijemePrijema().isBefore(trenutnoVirtualnoVrijeme)
-          && !paket.isPoslanZaDostavu()) {
+          && !paket.jePoslanZaDostavu()) {
         filtriraniPaketi.add(paket);
         zaprimljeniPaketi.add(paket);
       }
+    }
+    return filtriraniPaketi;
+  }
+
+  public List<Paket> dohvatiPaketeZaObavijesti() {
+    List<Paket> filtriraniPaketi = new ArrayList<>();
+    for (Paket paket : primljeniPaketi) {
+      filtriraniPaketi.add(paket);
     }
     return filtriraniPaketi;
   }

@@ -18,6 +18,7 @@ public class Paket {
   private final UslugaDostave uslugaDostave;
   private final double iznosPouzeca;
   private boolean poslanZaDostavu = false;
+  private boolean statusObavijesti = true;
 
   Paket(String oznaka, LocalDateTime vrijemePrijema, String posiljatelj, String primatelj,
       String vrstaPaketa, double visina, double sirina, double duzina, double tezina,
@@ -79,7 +80,7 @@ public class Paket {
     return iznosPouzeca;
   }
 
-  public boolean isPoslanZaDostavu() {
+  public boolean jePoslanZaDostavu() {
     return poslanZaDostavu;
   }
 
@@ -87,25 +88,17 @@ public class Paket {
     this.poslanZaDostavu = poslanZaDostavu;
   }
 
+  public boolean getStatusObavijesti() {
+    return statusObavijesti;
+  }
+
+  public void setStatusObavijesti(boolean statusObavijesti) {
+    this.statusObavijesti = statusObavijesti;
+  }
+
   public static LocalDateTime konvertirajVrijeme(String vrijeme) {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm:ss");
     return LocalDateTime.parse(vrijeme, formatter);
-  }
-
-  @Override
-  public String toString() {
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm:ss");
-      return "Paket[" +
-             "Oznaka='" + oznaka + '\'' +
-             ", VrijemePrijema=" + vrijemePrijema.format(formatter) +
-             ", Pošiljatelj='" + posiljatelj + '\'' +
-             ", Primatelj='" + primatelj + '\'' +
-             ", VrstaPaketa='" + vrstaPaketa + '\'' +
-             ", Dimenzije=" + visina + "x" + sirina + "x" + duzina +
-             ", Težina=" + tezina +
-             ", UslugaDostave=" + (uslugaDostave != null ? uslugaDostave.toString() : "N/A") +
-             ", IznosPouzeća=" + iznosPouzeca +
-             ']';
   }
 
 }
