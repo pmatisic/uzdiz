@@ -10,12 +10,12 @@ public class SlusacPaketa implements Slusac {
   }
 
   @Override
-  public void update(String paketId, boolean statusObavijesti) {
-    String statusPoruka = statusObavijesti ? "želi" : "ne želi";
+  public void update(String oznaka, boolean status) {
+    String statusPoruka = status ? "želi" : "ne želi";
     String uloga = jePosiljatelj ? "Pošiljatelj" : "Primatelj";
 
     System.out.println(uloga + " " + imeOsobe + " " + statusPoruka + " primati obavijesti za paket "
-        + paketId + ".");
+        + oznaka + ".");
   }
 
   public String getImeOsobe() {

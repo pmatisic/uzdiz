@@ -22,61 +22,57 @@ public class ServisObavijesti {
     }
   }
 
-  private void pretplatiKorisnikaNaPaket(String korisnik, String paketId, boolean jePosiljatelj) {
-    getOrCreateSlusac(korisnik, jePosiljatelj);
-    subscribe(korisnik, paketId);
+  private void pretplatiKorisnikaNaPaket(String osoba, String oznaka, boolean jePosiljatelj) {
+    getOrCreateSlusac(osoba, jePosiljatelj);
+    subscribe(osoba, oznaka);
   }
 
-  public boolean jePretplacen(String osoba, String paketId) {
-    if (!slusaciPoPaketima.containsKey(paketId)) {
+  public boolean jePretplacen(String osoba, String oznaka) {
+    if (!slusaciPoPaketima.containsKey(oznaka)) {
       return false;
     }
-
-    for (Slusac slusac : slusaciPoPaketima.get(paketId)) {
+    for (Slusac slusac : slusaciPoPaketima.get(oznaka)) {
       if (slusac instanceof SlusacPaketa && ((SlusacPaketa) slusac).getImeOsobe().equals(osoba)) {
         return true;
       }
     }
-
     return false;
   }
 
-  public Slusac getOrCreateSlusac(String imeOsobe, boolean jePosiljatelj) {
-    return slusaciPoImenu.computeIfAbsent(imeOsobe, k -> new SlusacPaketa(imeOsobe, jePosiljatelj));
+  public Slusac getOrCreateSlusac(String osoba, boolean jePosiljatelj) {
+    return slusaciPoImenu.computeIfAbsent(osoba, k -> new SlusacPaketa(osoba, jePosiljatelj));
   }
 
-  public void subscribe(String osoba, String paketId) {
+  public void subscribe(String osoba, String oznaka) {
     Slusac slusac = slusaciPoImenu.get(osoba);
     if (slusac != null) {
       List<Slusac> slusaciPaketa =
-          slusaciPoPaketima.computeIfAbsent(paketId, k -> new ArrayList<>());
+          slusaciPoPaketima.computeIfAbsent(oznaka, k -> new ArrayList<>());
       if (!slusaciPaketa.contains(slusac)) {
         slusaciPaketa.add(slusac);
       }
     }
   }
 
-  public void unsubscribe(String osoba, String paketId) {
+  public void unsubscribe(String osoba, String oznaka) {
     Slusac slusac = slusaciPoImenu.get(osoba);
     if (slusac != null) {
-      List<Slusac> slusaciPaketa = slusaciPoPaketima.get(paketId);
+      List<Slusac> slusaciPaketa = slusaciPoPaketima.get(oznaka);
       if (slusaciPaketa != null) {
         slusaciPaketa.remove(slusac);
       }
     }
   }
 
-  public void notifyObservers(String paketId, boolean statusObavijesti) {
-    List<Slusac> slusaci = slusaciPoPaketima.getOrDefault(paketId, new ArrayList<>());
+  public void notifyObservers(String oznaka, String osoba, boolean status) {
+    List<Slusac> slusaci = slusaciPoPaketima.getOrDefault(oznaka, new ArrayList<>());
     for (Slusac slusac : slusaci) {
-      slusac.update(paketId, statusObavijesti);
-    }
-  }
-
-  public void ispisiSveSlusace() {
-    System.out.println("Registrirani slušači:");
-    for (String imeOsobe : slusaciPoImenu.keySet()) {
-      System.out.println("Ime osobe: " + imeOsobe);
+      if (slusac instanceof SlusacPaketa) {
+        SlusacPaketa slusacPaketa = (SlusacPaketa) slusac;
+        if (slusacPaketa.getImeOsobe().equals(osoba)) {
+          slusacPaketa.update(oznaka, status);
+        }
+      }
     }
   }
 }

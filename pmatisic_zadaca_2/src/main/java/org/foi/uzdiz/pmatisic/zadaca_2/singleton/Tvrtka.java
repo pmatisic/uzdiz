@@ -246,8 +246,7 @@ public class Tvrtka {
         servisObavijesti.unsubscribe(osoba, oznaka);
       }
 
-      servisObavijesti.ispisiSveSlusace();
-      servisObavijesti.notifyObservers(oznaka, statusObavijesti);
+      servisObavijesti.notifyObservers(oznaka, osoba, statusObavijesti);
     } else {
       System.out.println("Neispravan format naredbe.");
     }
