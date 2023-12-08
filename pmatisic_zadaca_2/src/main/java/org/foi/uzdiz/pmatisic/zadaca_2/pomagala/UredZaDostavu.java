@@ -102,8 +102,8 @@ public class UredZaDostavu {
 
           ukrcaniPaketi.computeIfAbsent(vozilo, k -> new ArrayList<>()).add(paket);
           statusPaketa.put(paket.getOznaka(), "Ukrcano");
-          System.out
-              .println("Paket " + paket.getOznaka() + " je ukrcan na " + vozilo.getRegistracija());
+          System.out.printf("Paket %s je ukrcan na %s.%n", paket.getOznaka(),
+              vozilo.getRegistracija());
           isporuceniPaketi.put(paket.getOznaka(), false);
           iterator.remove();
         }
@@ -129,8 +129,8 @@ public class UredZaDostavu {
     LocalDateTime vrijemeSljedeceDostave = vozilo.getVrijemeSljedeceDostave();
     vrijemeSljedeceDostave = trenutnoVirtualnoVrijeme.plusMinutes(vrijemeIsporuke);
 
-    System.out.println("U " + trenutnoVirtualnoVrijeme.format(dateTimeFormatter)
-        + " dostava je pokrenuta za vozilo " + vozilo.getRegistracija());
+    System.out.println("\nU " + trenutnoVirtualnoVrijeme.format(dateTimeFormatter)
+        + " dostava je pokrenuta za vozilo " + vozilo.getRegistracija() + ".\n");
 
     Iterator<Paket> iterator = paketiZaIsporuku.iterator();
     while (iterator.hasNext()) {
@@ -142,9 +142,9 @@ public class UredZaDostavu {
         continue;
       }
 
-      System.out.println("U " + vrijemeSljedeceDostave.format(dateTimeFormatter) + " paket "
-          + paket.getOznaka() + " isporučen primatelju " + paket.getPrimatelj() + " pomoću vozila: "
-          + vozilo.getRegistracija());
+      System.out.printf("U %s paket %s isporučen primatelju %s pomoću vozila %s.%n",
+          vrijemeSljedeceDostave.format(dateTimeFormatter), paket.getOznaka(), paket.getPrimatelj(),
+          vozilo.getRegistracija());
 
       vrijemePreuzimanjaPaketa.put(paket.getOznaka(), vrijemeSljedeceDostave);
       statusPaketa.put(paket.getOznaka(), "Dostavljeno");

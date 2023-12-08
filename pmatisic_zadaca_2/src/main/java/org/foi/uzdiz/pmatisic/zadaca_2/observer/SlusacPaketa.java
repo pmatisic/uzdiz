@@ -1,26 +1,24 @@
 package org.foi.uzdiz.pmatisic.zadaca_2.observer;
 
 public class SlusacPaketa implements Slusac {
-  private String oznaka;
-  private String posiljatelj;
-  private String primatelj;
+  private final String imeOsobe;
+  private final boolean jePosiljatelj;
 
-  public SlusacPaketa(String oznaka, String posiljatelj, String primatelj) {
-    this.oznaka = oznaka;
-    this.posiljatelj = posiljatelj;
-    this.primatelj = primatelj;
+  public SlusacPaketa(String imeOsobe, boolean jePosiljatelj) {
+    this.imeOsobe = imeOsobe;
+    this.jePosiljatelj = jePosiljatelj;
   }
 
   @Override
-  public void update(String oznaka, boolean statusObavijesti) {
-    if (this.oznaka.equals(oznaka)) {
-      String statusPorukaPosiljatelja = statusObavijesti ? "želi" : "ne želi";
-      String statusPorukaPrimatelja = statusObavijesti ? "želi" : "ne želi";
+  public void update(String paketId, boolean statusObavijesti) {
+    String statusPoruka = statusObavijesti ? "želi" : "ne želi";
+    String uloga = jePosiljatelj ? "Pošiljatelj" : "Primatelj";
 
-      System.out.println("Pošiljatelj " + posiljatelj + " " + statusPorukaPosiljatelja
-          + " primati obavijesti za paket " + oznaka + ".");
-      System.out.println("Primatelj " + primatelj + " " + statusPorukaPrimatelja
-          + " primati obavijesti za paket " + oznaka + ".");
-    }
+    System.out.println(uloga + " " + imeOsobe + " " + statusPoruka + " primati obavijesti za paket "
+        + paketId + ".");
+  }
+
+  public String getImeOsobe() {
+    return imeOsobe;
   }
 }

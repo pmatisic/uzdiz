@@ -25,7 +25,6 @@ import org.foi.uzdiz.pmatisic.zadaca_2.model.Ulica;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Vozilo;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.VrstaPaketa;
 import org.foi.uzdiz.pmatisic.zadaca_2.observer.ServisObavijesti;
-import org.foi.uzdiz.pmatisic.zadaca_2.observer.Slusac;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.Provjera;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.UredZaDostavu;
 import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.UredZaPrijem;
@@ -210,9 +209,19 @@ public class Tvrtka {
 
     var primljeniPaketi = uredZaPrijem.dohvatiPrimljenePakete();
     for (Paket paket : primljeniPaketi) {
-      if (paket.getStatusObavijesti() && paket.getVrijemePrijema().isBefore(virtualnoVrijeme)) {
-        System.out.println("Paket " + paket.getOznaka() + " za primatelja " + paket.getPrimatelj()
-            + " je zaprimljen od pošiljatelja " + paket.getPosiljatelj() + ".");
+      if (paket.getVrijemePrijema().isBefore(virtualnoVrijeme)) {
+        boolean posiljateljPretplacen =
+            servisObavijesti.jePretplacen(paket.getPosiljatelj(), paket.getOznaka());
+        boolean primateljPretplacen =
+            servisObavijesti.jePretplacen(paket.getPrimatelj(), paket.getOznaka());
+        if (posiljateljPretplacen) {
+          System.out.println("Paket " + paket.getOznaka() + " je zaprimljen za pošiljatelja "
+              + paket.getPosiljatelj() + ".");
+        }
+        if (primateljPretplacen) {
+          System.out.println("Paket " + paket.getOznaka() + " je zaprimljen za primatelja "
+              + paket.getPrimatelj() + ".");
+        }
       }
     }
 
@@ -230,22 +239,14 @@ public class Tvrtka {
       String oznaka = matcher.group(2).trim();
       String status = matcher.group(3).trim();
       boolean statusObavijesti = status.equals("D");
-      Slusac slusac = servisObavijesti.getOrCreateSlusac(osoba, "", "");
 
       if (statusObavijesti) {
-        servisObavijesti.subscribe(oznaka, slusac);
+        servisObavijesti.subscribe(osoba, oznaka);
+      } else {
+        servisObavijesti.unsubscribe(osoba, oznaka);
       }
 
-      if (!statusObavijesti) {
-        for (Paket paket : paketiZaObavijesti) {
-          if (paket.getOznaka().equals(oznaka)) {
-            paket.setStatusObavijesti(false);
-            break;
-          }
-        }
-        servisObavijesti.unsubscribe(oznaka, slusac);
-      }
-
+      servisObavijesti.ispisiSveSlusace();
       servisObavijesti.notifyObservers(oznaka, statusObavijesti);
     } else {
       System.out.println("Neispravan format naredbe.");

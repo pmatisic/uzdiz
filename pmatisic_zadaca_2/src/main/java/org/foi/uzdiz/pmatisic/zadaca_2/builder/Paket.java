@@ -18,7 +18,6 @@ public class Paket {
   private final UslugaDostave uslugaDostave;
   private final double iznosPouzeca;
   private boolean poslanZaDostavu = false;
-  private boolean statusObavijesti = true;
 
   Paket(String oznaka, LocalDateTime vrijemePrijema, String posiljatelj, String primatelj,
       String vrstaPaketa, double visina, double sirina, double duzina, double tezina,
@@ -86,14 +85,6 @@ public class Paket {
 
   public void setPoslanZaDostavu(boolean poslanZaDostavu) {
     this.poslanZaDostavu = poslanZaDostavu;
-  }
-
-  public boolean getStatusObavijesti() {
-    return statusObavijesti;
-  }
-
-  public void setStatusObavijesti(boolean statusObavijesti) {
-    this.statusObavijesti = statusObavijesti;
   }
 
   public static LocalDateTime konvertirajVrijeme(String vrijeme) {
