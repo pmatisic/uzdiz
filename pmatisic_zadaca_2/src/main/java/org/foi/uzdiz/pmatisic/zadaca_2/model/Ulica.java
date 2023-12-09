@@ -1,6 +1,10 @@
 package org.foi.uzdiz.pmatisic.zadaca_2.model;
 
-public class Ulica {
+import java.util.ArrayList;
+import java.util.List;
+import org.foi.uzdiz.pmatisic.zadaca_2.composite.Prostor;
+
+public class Ulica implements Prostor {
 
   private int id;
   private String naziv;
@@ -75,6 +79,16 @@ public class Ulica {
 
   public void setNajveciKucniBroj(int najveciKucniBroj) {
     this.najveciKucniBroj = najveciKucniBroj;
+  }
+
+  @Override
+  public int dohvatiId() {
+    return this.id;
+  }
+
+  @Override
+  public List<Prostor> dohvatiDjecu() {
+    return new ArrayList<>();
   }
 
 }

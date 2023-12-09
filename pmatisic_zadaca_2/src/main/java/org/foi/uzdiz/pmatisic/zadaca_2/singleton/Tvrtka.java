@@ -125,6 +125,8 @@ public class Tvrtka {
         uredZaPrijem.ispisTablicePrimljenihPaketa();
       } else if (unos.startsWith("VR")) {
         izvrsiVirtualnoVrijeme(unos);
+      } else if (unos.startsWith("PP")) {
+        uredZaDostavu.ispisiTablicu();
       } else if (unos.startsWith("PO")) {
         promijeniStatusObavijesti(unos);
       } else if (unos.equals("Q")) {
@@ -171,6 +173,10 @@ public class Tvrtka {
     servisObavijesti.automatskaPretplata(paketiZaObavijesti);
 
     uredZaDostavu = new UredZaDostavu(vozila, vrijemeIsporuke);
+
+    uredZaDostavu.preuzmiPodatkeOProstoru(podrucja, mjesta, ulice);
+
+    uredZaDostavu.izgradiCompositeStrukturu();
   }
 
   private void izvrsiVirtualnoVrijeme(String unos) {

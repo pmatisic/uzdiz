@@ -2,8 +2,9 @@ package org.foi.uzdiz.pmatisic.zadaca_2.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.foi.uzdiz.pmatisic.zadaca_2.composite.Prostor;
 
-public class Mjesto {
+public class Mjesto implements Prostor {
 
   private int id;
   private String naziv;
@@ -37,6 +38,16 @@ public class Mjesto {
 
   public void setUlice(List<Integer> ulice) {
     this.ulice = new ArrayList<>(ulice);
+  }
+
+  @Override
+  public int dohvatiId() {
+    return this.id;
+  }
+
+  @Override
+  public List<Prostor> dohvatiDjecu() {
+    return new ArrayList<>();
   }
 
 }

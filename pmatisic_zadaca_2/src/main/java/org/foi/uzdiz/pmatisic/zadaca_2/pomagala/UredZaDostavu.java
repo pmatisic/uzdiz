@@ -10,6 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import org.foi.uzdiz.pmatisic.zadaca_2.builder.Paket;
+import org.foi.uzdiz.pmatisic.zadaca_2.composite.CompositeProstor;
+import org.foi.uzdiz.pmatisic.zadaca_2.composite.Prostor;
+import org.foi.uzdiz.pmatisic.zadaca_2.model.Mjesto;
+import org.foi.uzdiz.pmatisic.zadaca_2.model.Podrucje;
+import org.foi.uzdiz.pmatisic.zadaca_2.model.Ulica;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.UslugaDostave;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Vozilo;
 
@@ -23,6 +28,12 @@ public class UredZaDostavu {
   private List<Vozilo> vozila = new LinkedList<>();
   private Map<Vozilo, Double> tezinaVozila = new HashMap<>();
   private Map<Vozilo, Double> volumenVozila = new HashMap<>();
+  private Map<Integer, Mjesto> mjestoMap = new HashMap<>();
+  private Map<Integer, Ulica> ulicaMap = new HashMap<>();
+  private Map<Integer, List<Integer>> podrucjeMjestaMap = new HashMap<>();
+  private Map<Integer, List<Integer>> mjestoUliceMap = new HashMap<>();
+  private List<CompositeProstor> prostori = new ArrayList<>();
+  private List<Podrucje> podrucjaList = new ArrayList<>();
   private int vrijemeIsporuke;
   private LocalDateTime trenutnoVirtualnoVrijeme;
   private LocalDateTime sljedeciPuniSat;
@@ -38,7 +49,7 @@ public class UredZaDostavu {
     izracunajVrijemeDoPunogSata();
   }
 
-  private void izracunajVrijemeDoPunogSata() {
+  public void izracunajVrijemeDoPunogSata() {
     int minuteDoPunogSata = 60 - trenutnoVirtualnoVrijeme.getMinute();
     if (minuteDoPunogSata == 60)
       minuteDoPunogSata = 0;
@@ -81,6 +92,7 @@ public class UredZaDostavu {
       if (!vozilo.jeSlobodno()) {
         continue;
       }
+
       double trenutnaTezina = dohvatiTrenutnuTezinuVozila(vozilo);
       double trenutniVolumen = dohvatiTrenutniVolumenVozila(vozilo);
       boolean imaHitnihPaketa = false;
@@ -96,14 +108,14 @@ public class UredZaDostavu {
         trenutniVolumen += paket.getVisina() * paket.getSirina() * paket.getDuzina();
         if (trenutnaTezina <= vozilo.getKapacitetTezine()
             && trenutniVolumen <= vozilo.getKapacitetProstora()) {
-
           tezinaVozila.put(vozilo, trenutnaTezina);
           volumenVozila.put(vozilo, trenutniVolumen);
-
           ukrcaniPaketi.computeIfAbsent(vozilo, k -> new ArrayList<>()).add(paket);
           statusPaketa.put(paket.getOznaka(), "Ukrcano");
+
           System.out.printf("Paket %s je ukrcan na %s.%n", paket.getOznaka(),
               vozilo.getRegistracija());
+
           isporuceniPaketi.put(paket.getOznaka(), false);
           iterator.remove();
         }
@@ -160,6 +172,112 @@ public class UredZaDostavu {
     if (paketiZaIsporuku.isEmpty()) {
       ukrcaniPaketi.remove(vozilo);
     }
+  }
+
+  public void preuzmiPodatkeOProstoru(List<Podrucje> podrucja, List<Mjesto> mjesta,
+      List<Ulica> ulice) {
+    for (Ulica ulica : ulice) {
+      ulicaMap.put(ulica.getId(), ulica);
+    }
+
+    for (Mjesto mjesto : mjesta) {
+      List<Integer> uliceMjesta = new ArrayList<>();
+      for (Integer idUlice : mjesto.getUlice()) {
+        uliceMjesta.add(idUlice);
+      }
+      mjestoMap.put(mjesto.getId(), mjesto);
+      mjestoUliceMap.put(mjesto.getId(), uliceMjesta);
+    }
+
+    for (Podrucje podrucje : podrucja) {
+      List<Integer> uliceUPodrucju = new ArrayList<>();
+      for (Podrucje.Par<Integer, String> par : podrucje.getGradUlicaParovi()) {
+        int idMjesta = par.getPrvi();
+        String uliceGradova = par.getDrugi();
+        if (uliceGradova.equals("*")) {
+          List<Integer> uliceMjesta = mjestoUliceMap.getOrDefault(idMjesta, new ArrayList<>());
+          uliceUPodrucju.addAll(uliceMjesta);
+        } else {
+          String[] uliceIds = uliceGradova.split(",");
+          for (String ulicaIdStr : uliceIds) {
+            try {
+              int ulicaId = Integer.parseInt(ulicaIdStr);
+              uliceUPodrucju.add(ulicaId);
+            } catch (NumberFormatException e) {
+              Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, "Ulica s ID-om: " + ulicaIdStr,
+                  "Nevažeći ID ulice!");
+            }
+          }
+        }
+      }
+      podrucjaList.add(podrucje);
+      podrucjeMjestaMap.put(podrucje.getId(), uliceUPodrucju);
+    }
+  }
+
+  public void ispisiTablicu() {
+    for (CompositeProstor podrucje : prostori) {
+      ispisiPodrucje(podrucje, 0);
+    }
+  }
+
+  private void ispisiPodrucje(Prostor prostor, int razina) {
+    if (prostor instanceof CompositeProstor) {
+      System.out.printf("%sPodrucje: %d%n", "  ".repeat(razina), prostor.dohvatiId());
+      for (Prostor dijete : prostor.dohvatiDjecu()) {
+        ispisiPodrucje(dijete, razina + 1);
+      }
+    } else if (prostor instanceof Mjesto) {
+      Mjesto mjesto = (Mjesto) prostor;
+      System.out.printf("%sGrad: %d %s%n", "  ".repeat(razina), mjesto.getId(), mjesto.getNaziv());
+      for (Integer ulicaId : mjesto.getUlice()) {
+        Ulica ulica = ulicaMap.get(ulicaId);
+        if (ulica != null) {
+          System.out.printf("%sUlica: %d %s%n", "  ".repeat(razina + 1), ulica.getId(),
+              ulica.getNaziv());
+        }
+      }
+    }
+  }
+
+  public void izgradiCompositeStrukturu() {
+    CompositeProstor korijen = new CompositeProstor(0);
+
+    for (Podrucje podrucjeData : podrucjaList) {
+      CompositeProstor podrucje = new CompositeProstor(podrucjeData.getId());
+      Map<Integer, List<Integer>> mjestaUliceMap = new HashMap<>();
+
+      for (Podrucje.Par<Integer, String> gradUlica : podrucjeData.getGradUlicaParovi()) {
+        int idMjesta = gradUlica.getPrvi();
+        Mjesto originalnoMjesto = mjestoMap.get(idMjesta);
+
+        if (originalnoMjesto != null) {
+          List<Integer> ulice = mjestaUliceMap.computeIfAbsent(idMjesta, k -> new ArrayList<>());
+
+          if (gradUlica.getDrugi().equals("*")) {
+            ulice.addAll(originalnoMjesto.getUlice());
+          } else {
+            for (String ulicaIdStr : gradUlica.getDrugi().split(",")) {
+              int ulicaId = Integer.parseInt(ulicaIdStr);
+              ulice.add(ulicaId);
+            }
+          }
+        }
+      }
+
+      for (Map.Entry<Integer, List<Integer>> entry : mjestaUliceMap.entrySet()) {
+        Mjesto originalnoMjesto = mjestoMap.get(entry.getKey());
+        if (originalnoMjesto != null) {
+          Mjesto novoMjesto =
+              new Mjesto(entry.getKey(), originalnoMjesto.getNaziv(), entry.getValue());
+          podrucje.dodajPodrucje(novoMjesto);
+        }
+      }
+
+      korijen.dodajPodrucje(podrucje);
+    }
+
+    prostori.add(korijen);
   }
 
 }
