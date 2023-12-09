@@ -3,6 +3,7 @@ package org.foi.uzdiz.pmatisic.zadaca_2.singleton;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -32,6 +33,7 @@ import org.foi.uzdiz.pmatisic.zadaca_2.pomagala.UredZaPrijem;
 public class Tvrtka {
 
   private static volatile Tvrtka instance;
+  private static Map<String, String> podatci = new HashMap<>();
   private UredZaPrijem uredZaPrijem;
   private UredZaDostavu uredZaDostavu;
   private ServisObavijesti servisObavijesti;
@@ -59,7 +61,7 @@ public class Tvrtka {
   private LocalTime pocetakRada;
   private LocalTime krajRada;
 
-  private Tvrtka(Map<String, String> podatci) {
+  private Tvrtka() {
     this.gps = podatci.get("gps").toString();
     this.maxTezina = Integer.parseInt(podatci.get("mt"));
     this.vrijemeIsporuke = Integer.parseInt(podatci.get("vi"));
@@ -73,13 +75,13 @@ public class Tvrtka {
     this.servisObavijesti = new ServisObavijesti();
   }
 
-  public static Tvrtka getInstance(Map<String, String> noviPodatci) {
+  public static Tvrtka getInstance() {
     Tvrtka result = instance;
     if (result == null) {
       synchronized (Tvrtka.class) {
         result = instance;
         if (result == null) {
-          instance = result = new Tvrtka(noviPodatci);
+          instance = result = new Tvrtka();
         }
       }
     }
@@ -103,13 +105,13 @@ public class Tvrtka {
       return;
     }
 
-    Map<String, String> podatci = provjera.dohvatiPodatke();
+    podatci = provjera.dohvatiPodatke();
     if (podatci == null || podatci.isEmpty()) {
       System.out.println("Greška u dohvaćanju podataka!");
       return;
     }
 
-    Tvrtka tvrtkaInstance = Tvrtka.getInstance(podatci);
+    Tvrtka tvrtkaInstance = Tvrtka.getInstance();
     tvrtkaInstance.citajPodatke(podatci);
     tvrtkaInstance.inicijaliziraj();
     tvrtkaInstance.interakcija();
@@ -127,6 +129,8 @@ public class Tvrtka {
         izvrsiVirtualnoVrijeme(unos);
       } else if (unos.startsWith("PP")) {
         uredZaDostavu.ispisiTablicu();
+      } else if (unos.startsWith("PS")) {
+        promijeniStanjeVozila(unos);
       } else if (unos.startsWith("PO")) {
         promijeniStatusObavijesti(unos);
       } else if (unos.equals("Q")) {
@@ -253,6 +257,20 @@ public class Tvrtka {
       }
 
       servisObavijesti.notifyObservers(oznaka, osoba, statusObavijesti);
+    } else {
+      System.out.println("Neispravan format naredbe.");
+    }
+  }
+
+  private void promijeniStanjeVozila(String unos) {
+    Pattern pattern = Pattern.compile("PS\\s+([A-Z0-9ČŽŠĆĐ]+)\\s+(A|NI|NA)");
+    Matcher matcher = pattern.matcher(unos);
+
+    if (matcher.matches()) {
+      String vozilo = matcher.group(1).trim();
+      String status = matcher.group(2).trim();
+
+      uredZaDostavu.promijeniStanjeVozila(vozilo, status);
     } else {
       System.out.println("Neispravan format naredbe.");
     }

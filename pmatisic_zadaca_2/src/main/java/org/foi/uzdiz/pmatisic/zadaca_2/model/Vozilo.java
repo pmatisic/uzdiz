@@ -1,6 +1,11 @@
 package org.foi.uzdiz.pmatisic.zadaca_2.model;
 
 import java.time.LocalDateTime;
+import org.foi.uzdiz.pmatisic.zadaca_2.builder.Paket;
+import org.foi.uzdiz.pmatisic.zadaca_2.state.AktivnoStanjeVozila;
+import org.foi.uzdiz.pmatisic.zadaca_2.state.NeaktivnoStanjeVozila;
+import org.foi.uzdiz.pmatisic.zadaca_2.state.NeispravnoStanjeVozila;
+import org.foi.uzdiz.pmatisic.zadaca_2.state.StanjeVozila;
 
 public class Vozilo {
 
@@ -14,6 +19,7 @@ public class Vozilo {
   private StatusVozila status;
   private LocalDateTime vrijemeSljedeceDostave = null;
   private boolean slobodno = true;
+  private StanjeVozila trenutnoStanje;
 
   public Vozilo(String registracija, String opis, double kapacitetTezine, double kapacitetProstora,
       int redoslijed, double prosjecnaBrzina, String podrucjaPoRangu, StatusVozila status) {
@@ -25,6 +31,7 @@ public class Vozilo {
     this.prosjecnaBrzina = prosjecnaBrzina;
     this.podrucjaPoRangu = podrucjaPoRangu;
     this.status = status;
+    postaviStanje(status);
   }
 
   public String getRegistracija() {
@@ -105,6 +112,32 @@ public class Vozilo {
 
   public void setSlobodno(boolean slobodno) {
     this.slobodno = slobodno;
+  }
+
+  public void postaviStanje(StatusVozila status) {
+    switch (status) {
+      case A:
+        this.trenutnoStanje = new AktivnoStanjeVozila();
+        break;
+      case NA:
+        this.trenutnoStanje = new NeaktivnoStanjeVozila();
+        break;
+      case NI:
+        this.trenutnoStanje = new NeispravnoStanjeVozila();
+        break;
+    }
+  }
+
+  public boolean ukrcajPaket(Paket paket) {
+    return this.trenutnoStanje.ukrcajPaket(this, paket);
+  }
+
+  public void promijeniStanje(StanjeVozila novoStanje) {
+    this.trenutnoStanje = novoStanje;
+  }
+
+  public StanjeVozila getTrenutnoStanje() {
+    return this.trenutnoStanje;
   }
 
 }

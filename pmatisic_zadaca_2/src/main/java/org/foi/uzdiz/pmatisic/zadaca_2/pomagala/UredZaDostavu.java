@@ -17,6 +17,10 @@ import org.foi.uzdiz.pmatisic.zadaca_2.model.Podrucje;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Ulica;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.UslugaDostave;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Vozilo;
+import org.foi.uzdiz.pmatisic.zadaca_2.state.AktivnoStanjeVozila;
+import org.foi.uzdiz.pmatisic.zadaca_2.state.NeaktivnoStanjeVozila;
+import org.foi.uzdiz.pmatisic.zadaca_2.state.NeispravnoStanjeVozila;
+import org.foi.uzdiz.pmatisic.zadaca_2.state.StanjeVozila;
 
 public class UredZaDostavu {
 
@@ -102,6 +106,10 @@ public class UredZaDostavu {
         Paket paket = iterator.next();
         if (paket.getUslugaDostave() == UslugaDostave.H) {
           imaHitnihPaketa = true;
+        }
+
+        if (!vozilo.ukrcajPaket(paket)) {
+          continue;
         }
 
         trenutnaTezina += paket.getTezina();
@@ -223,17 +231,18 @@ public class UredZaDostavu {
 
   private void ispisiPodrucje(Prostor prostor, int razina) {
     if (prostor instanceof CompositeProstor) {
-      System.out.printf("%sPodrucje: %d%n", "  ".repeat(razina), prostor.dohvatiId());
+      System.out.printf("%sPodrucje: %d%n", "    ".repeat(razina), prostor.dohvatiId());
       for (Prostor dijete : prostor.dohvatiDjecu()) {
         ispisiPodrucje(dijete, razina + 1);
       }
     } else if (prostor instanceof Mjesto) {
       Mjesto mjesto = (Mjesto) prostor;
-      System.out.printf("%sGrad: %d %s%n", "  ".repeat(razina), mjesto.getId(), mjesto.getNaziv());
+      System.out.printf("%sGrad: %d %s%n", "    ".repeat(razina), mjesto.getId(),
+          mjesto.getNaziv());
       for (Integer ulicaId : mjesto.getUlice()) {
         Ulica ulica = ulicaMap.get(ulicaId);
         if (ulica != null) {
-          System.out.printf("%sUlica: %d %s%n", "  ".repeat(razina + 1), ulica.getId(),
+          System.out.printf("%sUlica: %d %s%n", "    ".repeat(razina + 1), ulica.getId(),
               ulica.getNaziv());
         }
       }
@@ -278,6 +287,33 @@ public class UredZaDostavu {
     }
 
     prostori.add(korijen);
+  }
+
+  public void promijeniStanjeVozila(String registracija, String novoStanje) {
+    for (Vozilo vozilo : vozila) {
+      if (vozilo.getRegistracija().equals(registracija)) {
+        StanjeVozila stanje;
+        switch (novoStanje) {
+          case "A":
+            stanje = new AktivnoStanjeVozila();
+            System.out.println("Vozilu " + registracija + " se postavlja status da je aktivno.");
+            break;
+          case "NI":
+            stanje = new NeispravnoStanjeVozila();
+            System.out.println("Vozilu " + registracija + " se postavlja status da je neispravno.");
+            break;
+          case "NA":
+            stanje = new NeaktivnoStanjeVozila();
+            System.out.println("Vozilu " + registracija + " se postavlja status da je neaktivno.");
+            break;
+          default:
+            System.out.println("Nepoznato stanje vozila.");
+            return;
+        }
+        vozilo.promijeniStanje(stanje);
+        return;
+      }
+    }
   }
 
 }
