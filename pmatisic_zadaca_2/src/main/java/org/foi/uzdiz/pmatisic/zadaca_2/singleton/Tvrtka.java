@@ -52,21 +52,21 @@ public class Tvrtka {
   private List<Mjesto> mjesta;
   private List<Ulica> ulice;
   private List<Podrucje> podrucja;
-  private String gps;
+  // private String gps;
   private int maxTezina;
   private int vrijemeIsporuke;
   private int mnoziteljSekunde;
-  private int isporuka;
+  // private int isporuka;
   private LocalDateTime virtualnoVrijeme;
   private LocalTime pocetakRada;
   private LocalTime krajRada;
 
   private Tvrtka() {
-    this.gps = podatci.get("gps").toString();
+    // this.gps = podatci.get("gps").toString();
     this.maxTezina = Integer.parseInt(podatci.get("mt"));
     this.vrijemeIsporuke = Integer.parseInt(podatci.get("vi"));
     this.mnoziteljSekunde = Integer.parseInt(podatci.get("ms"));
-    this.isporuka = Integer.parseInt(podatci.get("isporuka"));
+    // this.isporuka = Integer.parseInt(podatci.get("isporuka"));
     DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm:ss");
     this.virtualnoVrijeme = LocalDateTime.parse(podatci.get("vs"), dateTimeFormatter);
     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
@@ -181,6 +181,8 @@ public class Tvrtka {
     uredZaDostavu.preuzmiPodatkeOProstoru(podrucja, mjesta, ulice);
 
     uredZaDostavu.izgradiCompositeStrukturu();
+
+    uredZaDostavu.dohvatiOsobe(osobe);
   }
 
   private void izvrsiVirtualnoVrijeme(String unos) {

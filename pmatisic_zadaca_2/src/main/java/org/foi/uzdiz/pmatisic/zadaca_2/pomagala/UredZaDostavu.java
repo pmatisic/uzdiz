@@ -4,16 +4,20 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import org.foi.uzdiz.pmatisic.zadaca_2.builder.Paket;
 import org.foi.uzdiz.pmatisic.zadaca_2.composite.CompositeProstor;
 import org.foi.uzdiz.pmatisic.zadaca_2.composite.Prostor;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Mjesto;
+import org.foi.uzdiz.pmatisic.zadaca_2.model.Osoba;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Podrucje;
+import org.foi.uzdiz.pmatisic.zadaca_2.model.StatusVozila;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Ulica;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.UslugaDostave;
 import org.foi.uzdiz.pmatisic.zadaca_2.model.Vozilo;
@@ -38,6 +42,8 @@ public class UredZaDostavu {
   private Map<Integer, List<Integer>> mjestoUliceMap = new HashMap<>();
   private List<CompositeProstor> prostori = new ArrayList<>();
   private List<Podrucje> podrucjaList = new ArrayList<>();
+  private List<Osoba> osobe = new ArrayList<>();
+  private Set<String> logiraneGreske = new HashSet<>();
   private int vrijemeIsporuke;
   private LocalDateTime trenutnoVirtualnoVrijeme;
   private LocalDateTime sljedeciPuniSat;
@@ -74,6 +80,12 @@ public class UredZaDostavu {
     return volumenVozila.getOrDefault(vozilo, 0.0);
   }
 
+  public void dohvatiOsobe(List<Osoba> korisnici) {
+    for (Osoba osoba : korisnici) {
+      osobe.add(osoba);
+    }
+  }
+
   public void azurirajPaketeZaDostavu(List<Paket> paketi) {
     if (paketi != null) {
       paketi.sort((p1, p2) -> {
@@ -92,53 +104,109 @@ public class UredZaDostavu {
   }
 
   public void ukrcajPaket() {
+    if (!jeNaPunomSatu())
+      return;
+
     for (Vozilo vozilo : vozila) {
-      if (!vozilo.jeSlobodno()) {
+      if (!vozilo.jeSlobodno() || !vozilo.getStatus().equals(StatusVozila.A)) {
         continue;
       }
 
+      List<Integer> podrucjaVozila = dohvatiPodrucjaVozila(vozilo);
       double trenutnaTezina = dohvatiTrenutnuTezinuVozila(vozilo);
       double trenutniVolumen = dohvatiTrenutniVolumenVozila(vozilo);
-      boolean imaHitnihPaketa = false;
 
       Iterator<Paket> iterator = paketiZaDostavu.iterator();
       while (iterator.hasNext()) {
         Paket paket = iterator.next();
-        if (paket.getUslugaDostave() == UslugaDostave.H) {
-          imaHitnihPaketa = true;
+        Osoba primatelj = dohvatiOsobuPoImenu(paket.getPrimatelj());
+
+        if (primatelj == null) {
+          String kljucGreske =
+              "Paket " + paket.getOznaka() + ", Primatelj: " + paket.getPrimatelj();
+          if (!logiraneGreske.contains(kljucGreske)) {
+            Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, kljucGreske,
+                "Primatelj ne postoji ili nije pronađen.");
+            logiraneGreske.add(kljucGreske);
+          }
+          continue;
+        }
+
+        String paketPodrucje = dohvatiPodrucjePaketa(primatelj);
+        if (paketPodrucje == null || !podrucjaVozila.contains(Integer.parseInt(paketPodrucje))) {
+          continue;
+        }
+
+        if (!prostorZaPaket(vozilo, paket, trenutnaTezina, trenutniVolumen)) {
+          continue;
         }
 
         if (!vozilo.ukrcajPaket(paket)) {
           continue;
         }
 
-        trenutnaTezina += paket.getTezina();
-        trenutniVolumen += paket.getVisina() * paket.getSirina() * paket.getDuzina();
-        if (trenutnaTezina <= vozilo.getKapacitetTezine()
-            && trenutniVolumen <= vozilo.getKapacitetProstora()) {
-          tezinaVozila.put(vozilo, trenutnaTezina);
-          volumenVozila.put(vozilo, trenutniVolumen);
-          ukrcaniPaketi.computeIfAbsent(vozilo, k -> new ArrayList<>()).add(paket);
-          statusPaketa.put(paket.getOznaka(), "Ukrcano");
+        ukrcaniPaketi.computeIfAbsent(vozilo, k -> new ArrayList<>()).add(paket);
+        statusPaketa.put(paket.getOznaka(), "Ukrcano");
 
-          System.out.printf("Paket %s je ukrcan na %s.%n", paket.getOznaka(),
-              vozilo.getRegistracija());
+        System.out.printf("Paket %s je ukrcan na %s.%n", paket.getOznaka(),
+            vozilo.getRegistracija());
 
-          isporuceniPaketi.put(paket.getOznaka(), false);
-          iterator.remove();
-        }
+        isporuceniPaketi.put(paket.getOznaka(), false);
+        iterator.remove();
       }
 
-      boolean ispunjenKapacitet = (trenutnaTezina >= vozilo.getKapacitetTezine() * 0.5)
-          || (trenutniVolumen >= vozilo.getKapacitetProstora() * 0.5);
-      if ((imaHitnihPaketa || ispunjenKapacitet || jeNaPunomSatu())
-          && !ukrcaniPaketi.getOrDefault(vozilo, new ArrayList<>()).isEmpty()) {
+      if (!ukrcaniPaketi.getOrDefault(vozilo, new ArrayList<>()).isEmpty()) {
         vozilo.setSlobodno(false);
         isporuciPaket(vozilo);
-        tezinaVozila.put(vozilo, 0.0);
-        volumenVozila.put(vozilo, 0.0);
       }
     }
+  }
+
+  private Osoba dohvatiOsobuPoImenu(String ime) {
+    for (Osoba osoba : osobe) {
+      if (osoba.getIme().equals(ime)) {
+        return osoba;
+      }
+    }
+    return null;
+  }
+
+  private boolean prostorZaPaket(Vozilo vozilo, Paket paket, double trenutnaTezina,
+      double trenutniVolumen) {
+    double novaTezina = trenutnaTezina + paket.getTezina();
+    double noviVolumen =
+        trenutniVolumen + paket.getVisina() * paket.getSirina() * paket.getDuzina();
+    return novaTezina <= vozilo.getKapacitetTezine()
+        && noviVolumen <= vozilo.getKapacitetProstora();
+  }
+
+  private List<Integer> dohvatiPodrucjaVozila(Vozilo vozilo) {
+    String podrucja = vozilo.getPodrucjaPoRangu();
+    String[] podrucjaSplit = podrucja.split(",");
+    List<Integer> podrucjaID = new ArrayList<>();
+    for (String id : podrucjaSplit) {
+      try {
+        podrucjaID.add(Integer.parseInt(id.trim()));
+      } catch (NumberFormatException e) {
+        e.printStackTrace();
+      }
+    }
+    return podrucjaID;
+  }
+
+  private String dohvatiPodrucjePaketa(Osoba osoba) {
+    int idGrada = osoba.getGradId();
+    int idUlice = osoba.getUlicaId();
+
+    List<Integer> uliceMjesta = mjestoUliceMap.get(idGrada);
+    if (uliceMjesta != null && uliceMjesta.contains(idUlice)) {
+      for (Map.Entry<Integer, List<Integer>> entry : podrucjeMjestaMap.entrySet()) {
+        if (entry.getValue().contains(idGrada)) {
+          return entry.getKey().toString();
+        }
+      }
+    }
+    return null;
   }
 
   public void isporuciPaket(Vozilo vozilo) {
