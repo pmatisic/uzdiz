@@ -112,6 +112,8 @@ public class UredZaDostavu {
         continue;
       }
 
+      String podrucjeVozila = null;
+
       List<Integer> podrucjaVozila = dohvatiPodrucjaVozila(vozilo);
       double trenutnaTezina = dohvatiTrenutnuTezinuVozila(vozilo);
       double trenutniVolumen = dohvatiTrenutniVolumenVozila(vozilo);
@@ -137,6 +139,12 @@ public class UredZaDostavu {
           continue;
         }
 
+        if (podrucjeVozila == null) {
+          podrucjeVozila = paketPodrucje;
+        } else if (!podrucjeVozila.equals(paketPodrucje)) {
+          continue;
+        }
+
         if (!prostorZaPaket(vozilo, paket, trenutnaTezina, trenutniVolumen)) {
           continue;
         }
@@ -158,6 +166,7 @@ public class UredZaDostavu {
       if (!ukrcaniPaketi.getOrDefault(vozilo, new ArrayList<>()).isEmpty()) {
         vozilo.setSlobodno(false);
         isporuciPaket(vozilo);
+        podrucjeVozila = null;
       }
     }
   }
