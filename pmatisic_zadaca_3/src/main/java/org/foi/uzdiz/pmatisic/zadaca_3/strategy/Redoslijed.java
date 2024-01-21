@@ -49,18 +49,16 @@ public class Redoslijed implements StrategijaIsporuke {
       }
 
       Ulica ulica = dohvatiUlicuZaPaket(paket);
-      if (ulica == null) {
+      if (ulica == null)
         continue;
-      }
 
       Osoba primatelj = dohvatiPrimatelja(paket.getPrimatelj());
-      if (primatelj == null) {
+      if (primatelj == null)
         continue;
-      }
 
       String gpsPaketa = izracunajGPSAdresePaketa(ulica, primatelj.getKucniBroj());
+      @SuppressWarnings("unused")
       var udaljenost = izracunajUdaljenost(trenutniGPS, gpsPaketa);
-      // System.out.println(udaljenost);
       trenutniGPS = gpsPaketa;
 
       System.out.printf("U %s paket %s isporučen primatelju %s pomoću vozila %s.%n",

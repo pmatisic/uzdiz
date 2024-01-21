@@ -2,9 +2,7 @@ package org.foi.uzdiz.pmatisic.zadaca_3.strategy;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.PriorityQueue;
 import org.foi.uzdiz.pmatisic.zadaca_3.builder.Paket;
 import org.foi.uzdiz.pmatisic.zadaca_3.model.Osoba;
 import org.foi.uzdiz.pmatisic.zadaca_3.model.Ulica;
@@ -40,48 +38,52 @@ public class Udaljenost implements StrategijaIsporuke {
       trenutniGPS = gps;
     }
 
-    PriorityQueue<PaketUdaljenost> redPaketa =
-        new PriorityQueue<>(Comparator.comparingDouble(PaketUdaljenost::getUdaljenost));
+    while (!paketiZaIsporuku.isEmpty()) {
+      Paket najbliziPaket = null;
+      double najmanjaUdaljenost = Double.MAX_VALUE;
+      String gpsNajblizegPaketa = "";
 
-    for (Paket paket : paketiZaIsporuku) {
-      String status = UredZaDostavu.statusPaketa.getOrDefault(paket.getOznaka(), "");
-      if (Boolean.TRUE.equals(uredZaDostavu.isporuceniPaketi.get(paket.getOznaka()))
-          || !"Ukrcano".equals(status)) {
-        continue;
+      for (Paket paket : paketiZaIsporuku) {
+        String status = UredZaDostavu.statusPaketa.getOrDefault(paket.getOznaka(), "");
+        if (Boolean.TRUE.equals(uredZaDostavu.isporuceniPaketi.get(paket.getOznaka()))
+            || !"Ukrcano".equals(status)) {
+          continue;
+        }
+
+        Ulica ulica = dohvatiUlicuZaPaket(paket);
+        if (ulica == null)
+          continue;
+
+        Osoba primatelj = dohvatiPrimatelja(paket.getPrimatelj());
+        if (primatelj == null)
+          continue;
+
+        String gpsPaketa = izracunajGPSAdresePaketa(ulica, primatelj.getKucniBroj());
+        double udaljenost = izracunajUdaljenost(trenutniGPS, gpsPaketa);
+
+        if (udaljenost < najmanjaUdaljenost) {
+          najmanjaUdaljenost = udaljenost;
+          najbliziPaket = paket;
+          gpsNajblizegPaketa = gpsPaketa;
+        }
       }
 
-      Ulica ulica = dohvatiUlicuZaPaket(paket);
-      if (ulica == null) {
-        continue;
+      if (najbliziPaket != null) {
+        paketiZaIsporuku.remove(najbliziPaket);
+        trenutniGPS = gpsNajblizegPaketa;
+
+        System.out.printf("U %s paket %s isporučen primatelju %s pomoću vozila %s.%n",
+            vrijemeSljedeceDostave.format(uredZaDostavu.dateTimeFormatter),
+            najbliziPaket.getOznaka(), najbliziPaket.getPrimatelj(), vozilo.getRegistracija());
+
+        UredZaDostavu.vrijemePreuzimanjaPaketa.put(najbliziPaket.getOznaka(),
+            vrijemeSljedeceDostave);
+        UredZaDostavu.statusPaketa.put(najbliziPaket.getOznaka(), "Dostavljeno");
+        uredZaDostavu.isporuceniPaketi.put(najbliziPaket.getOznaka(), true);
+        vozilo.setSlobodno(true);
+        vrijemeSljedeceDostave = vrijemeSljedeceDostave.plusMinutes(uredZaDostavu.vrijemeIsporuke);
+        vozilo.setVrijemeSljedeceDostave(vrijemeSljedeceDostave);
       }
-
-      Osoba primatelj = dohvatiPrimatelja(paket.getPrimatelj());
-      if (primatelj == null) {
-        continue;
-      }
-
-      String gpsPaketa = izracunajGPSAdresePaketa(ulica, primatelj.getKucniBroj());
-      var udaljenost = izracunajUdaljenost(trenutniGPS, gpsPaketa);
-      redPaketa.add(new PaketUdaljenost(paket, udaljenost));
-    }
-
-    while (!redPaketa.isEmpty()) {
-      PaketUdaljenost paketUdaljenost = redPaketa.poll();
-      Paket paket = paketUdaljenost.getPaket();
-      trenutniGPS = izracunajGPSAdresePaketa(dohvatiUlicuZaPaket(paket),
-          dohvatiPrimatelja(paket.getPrimatelj()).getKucniBroj());
-
-      System.out.printf("U %s paket %s isporučen primatelju %s pomoću vozila %s.%n",
-          vrijemeSljedeceDostave.format(uredZaDostavu.dateTimeFormatter), paket.getOznaka(),
-          paket.getPrimatelj(), vozilo.getRegistracija());
-
-      UredZaDostavu.vrijemePreuzimanjaPaketa.put(paket.getOznaka(), vrijemeSljedeceDostave);
-      UredZaDostavu.statusPaketa.put(paket.getOznaka(), "Dostavljeno");
-      uredZaDostavu.isporuceniPaketi.put(paket.getOznaka(), true);
-      vozilo.setSlobodno(true);
-
-      vrijemeSljedeceDostave = vrijemeSljedeceDostave.plusMinutes(uredZaDostavu.vrijemeIsporuke);
-      vozilo.setVrijemeSljedeceDostave(vrijemeSljedeceDostave);
     }
 
     if (paketiZaIsporuku.isEmpty()) {
@@ -141,24 +143,6 @@ public class Udaljenost implements StrategijaIsporuke {
       }
     }
     return null;
-  }
-
-  private static class PaketUdaljenost {
-    private Paket paket;
-    private double udaljenost;
-
-    public PaketUdaljenost(Paket paket, double udaljenost) {
-      this.paket = paket;
-      this.udaljenost = udaljenost;
-    }
-
-    public double getUdaljenost() {
-      return udaljenost;
-    }
-
-    public Paket getPaket() {
-      return paket;
-    }
   }
 
 }
