@@ -48,25 +48,25 @@ public class Tvrtka {
   private List<VrstaPaketa> vrste;
   private List<Vozilo> vozila;
   private List<PrijemPaketa> prijemi;
-  private List<Osoba> osobe;
+  public List<Osoba> osobe;
   private List<Mjesto> mjesta;
-  private List<Ulica> ulice;
+  public List<Ulica> ulice;
   private List<Podrucje> podrucja;
-  // private String gps;
+  private String gps;
   private int maxTezina;
   private int vrijemeIsporuke;
   private int mnoziteljSekunde;
-  // private int isporuka;
+  private int isporuka;
   private LocalDateTime virtualnoVrijeme;
   private LocalTime pocetakRada;
   private LocalTime krajRada;
 
   private Tvrtka() {
-    // this.gps = podatci.get("gps").toString();
+    this.gps = podatci.get("gps").toString();
     this.maxTezina = Integer.parseInt(podatci.get("mt"));
     this.vrijemeIsporuke = Integer.parseInt(podatci.get("vi"));
     this.mnoziteljSekunde = Integer.parseInt(podatci.get("ms"));
-    // this.isporuka = Integer.parseInt(podatci.get("isporuka"));
+    this.isporuka = Integer.parseInt(podatci.get("isporuka"));
     DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm:ss");
     this.virtualnoVrijeme = LocalDateTime.parse(podatci.get("vs"), dateTimeFormatter);
     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
@@ -176,7 +176,7 @@ public class Tvrtka {
 
     servisObavijesti.automatskaPretplata(paketiZaObavijesti);
 
-    uredZaDostavu = new UredZaDostavu(vozila, vrijemeIsporuke);
+    uredZaDostavu = new UredZaDostavu(vozila, vrijemeIsporuke, isporuka, gps);
 
     uredZaDostavu.preuzmiPodatkeOProstoru(podrucja, mjesta, ulice);
 

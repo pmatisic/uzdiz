@@ -25,33 +25,46 @@ import org.foi.uzdiz.pmatisic.zadaca_3.state.AktivnoStanjeVozila;
 import org.foi.uzdiz.pmatisic.zadaca_3.state.NeaktivnoStanjeVozila;
 import org.foi.uzdiz.pmatisic.zadaca_3.state.NeispravnoStanjeVozila;
 import org.foi.uzdiz.pmatisic.zadaca_3.state.StanjeVozila;
+import org.foi.uzdiz.pmatisic.zadaca_3.strategy.Redoslijed;
+import org.foi.uzdiz.pmatisic.zadaca_3.strategy.StrategijaIsporuke;
+import org.foi.uzdiz.pmatisic.zadaca_3.strategy.Udaljenost;
 
 public class UredZaDostavu {
 
   public static Map<String, LocalDateTime> vrijemePreuzimanjaPaketa = new HashMap<>();
   public static Map<String, String> statusPaketa = new HashMap<>();
   private Queue<Paket> paketiZaDostavu = new LinkedList<>();
-  private Map<Vozilo, List<Paket>> ukrcaniPaketi = new HashMap<>();
-  private Map<String, Boolean> isporuceniPaketi = new HashMap<>();
+  public Map<Vozilo, List<Paket>> ukrcaniPaketi = new HashMap<>();
+  public Map<String, Boolean> isporuceniPaketi = new HashMap<>();
   private List<Vozilo> vozila = new LinkedList<>();
   private Map<Vozilo, Double> tezinaVozila = new HashMap<>();
   private Map<Vozilo, Double> volumenVozila = new HashMap<>();
   private Map<Integer, Mjesto> mjestoMap = new HashMap<>();
-  private Map<Integer, Ulica> ulicaMap = new HashMap<>();
+  public Map<Integer, Ulica> ulicaMap = new HashMap<>();
   private Map<Integer, List<Integer>> podrucjeMjestaMap = new HashMap<>();
   private Map<Integer, List<Integer>> mjestoUliceMap = new HashMap<>();
   private List<CompositeProstor> prostori = new ArrayList<>();
   private List<Podrucje> podrucjaList = new ArrayList<>();
   private List<Osoba> osobe = new ArrayList<>();
   private Set<String> logiraneGreske = new HashSet<>();
-  private int vrijemeIsporuke;
-  private LocalDateTime trenutnoVirtualnoVrijeme;
+  private StrategijaIsporuke strategijaIsporuke;
+  private String gps;
+  private int isporuka;
+  public int vrijemeIsporuke;
+  public LocalDateTime trenutnoVirtualnoVrijeme;
   private LocalDateTime sljedeciPuniSat;
-  private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm");
+  public DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm");
 
-  public UredZaDostavu(List<Vozilo> vozila, int vrijemeIsporuke) {
+  public UredZaDostavu(List<Vozilo> vozila, int vrijemeIsporuke, int isporuka, String gps) {
     this.vozila = vozila;
     this.vrijemeIsporuke = vrijemeIsporuke;
+    this.isporuka = isporuka;
+    this.gps = gps;
+    if (this.isporuka == 1) {
+      postaviStrategijuIsporuke(new Redoslijed(this));
+    } else {
+      postaviStrategijuIsporuke(new Udaljenost(this));
+    }
   }
 
   public void postaviTrenutnoVirtualnoVrijeme(LocalDateTime vrijeme) {
@@ -122,8 +135,8 @@ public class UredZaDostavu {
       while (iterator.hasNext()) {
         Paket paket = iterator.next();
         Osoba primatelj = dohvatiOsobuPoImenu(paket.getPrimatelj());
-
         if (primatelj == null) {
+          statusPaketa.put(paket.getOznaka(), "Neispravna pošiljka");
           String kljucGreske =
               "Paket " + paket.getOznaka() + ", Primatelj: " + paket.getPrimatelj();
           if (!logiraneGreske.contains(kljucGreske)) {
@@ -135,7 +148,28 @@ public class UredZaDostavu {
         }
 
         String paketPodrucje = dohvatiPodrucjePaketa(primatelj);
-        if (paketPodrucje == null || !podrucjaVozila.contains(Integer.parseInt(paketPodrucje))) {
+        if (paketPodrucje == null) {
+          statusPaketa.put(paket.getOznaka(), "Neispravna pošiljka");
+          String kljucGreske = "Paket " + paket.getOznaka() + ", Primatelj: " + paket.getPrimatelj()
+              + ", Područje paketa: " + paketPodrucje;
+          if (!logiraneGreske.contains(kljucGreske)) {
+            Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, kljucGreske,
+                "Neispravna adresa dostave, područje ne postoji.");
+            logiraneGreske.add(kljucGreske);
+          }
+          continue;
+        }
+
+        Ulica ulicaPrimatelja = ulicaMap.get(primatelj.getUlicaId());
+        if (ulicaPrimatelja == null) {
+          statusPaketa.put(paket.getOznaka(), "Neispravna pošiljka");
+          String kljucGreske = "Paket " + paket.getOznaka() + ", Primatelj: " + paket.getPrimatelj()
+              + ", Ulica ID: " + primatelj.getUlicaId();
+          if (!logiraneGreske.contains(kljucGreske)) {
+            Greske.logirajGresku(Greske.getRedniBrojGreske() + 1, kljucGreske,
+                "Neispravna adresa dostave, ulica ne postoji.");
+            logiraneGreske.add(kljucGreske);
+          }
           continue;
         }
 
@@ -146,6 +180,10 @@ public class UredZaDostavu {
         }
 
         if (!prostorZaPaket(vozilo, paket, trenutnaTezina, trenutniVolumen)) {
+          continue;
+        }
+
+        if (!podrucjaVozila.contains(Integer.parseInt(paketPodrucje))) {
           continue;
         }
 
@@ -206,7 +244,6 @@ public class UredZaDostavu {
   private String dohvatiPodrucjePaketa(Osoba osoba) {
     int idGrada = osoba.getGradId();
     int idUlice = osoba.getUlicaId();
-
     List<Integer> uliceMjesta = mjestoUliceMap.get(idGrada);
     if (uliceMjesta != null && uliceMjesta.contains(idUlice)) {
       for (Map.Entry<Integer, List<Integer>> entry : podrucjeMjestaMap.entrySet()) {
@@ -219,44 +256,13 @@ public class UredZaDostavu {
   }
 
   public void isporuciPaket(Vozilo vozilo) {
-    List<Paket> paketiZaIsporuku = ukrcaniPaketi.getOrDefault(vozilo, new ArrayList<>());
-    if (paketiZaIsporuku.isEmpty())
-      return;
-
-    LocalDateTime vrijemeSljedeceDostave = vozilo.getVrijemeSljedeceDostave();
-    vrijemeSljedeceDostave = trenutnoVirtualnoVrijeme.plusMinutes(vrijemeIsporuke);
-
-    System.out.println("\nU " + trenutnoVirtualnoVrijeme.format(dateTimeFormatter)
-        + " dostava je pokrenuta za vozilo " + vozilo.getRegistracija() + ".\n");
-
-    Iterator<Paket> iterator = paketiZaIsporuku.iterator();
-    while (iterator.hasNext()) {
-      Paket paket = iterator.next();
-      String status = statusPaketa.getOrDefault(paket.getOznaka(), "");
-
-      if (Boolean.TRUE.equals(isporuceniPaketi.get(paket.getOznaka()))
-          || !"Ukrcano".equals(status)) {
-        continue;
-      }
-
-      System.out.printf("U %s paket %s isporučen primatelju %s pomoću vozila %s.%n",
-          vrijemeSljedeceDostave.format(dateTimeFormatter), paket.getOznaka(), paket.getPrimatelj(),
-          vozilo.getRegistracija());
-
-      vrijemePreuzimanjaPaketa.put(paket.getOznaka(), vrijemeSljedeceDostave);
-      statusPaketa.put(paket.getOznaka(), "Dostavljeno");
-      isporuceniPaketi.put(paket.getOznaka(), true);
-      vozilo.setSlobodno(true);
-
-      vrijemeSljedeceDostave = vrijemeSljedeceDostave.plusMinutes(vrijemeIsporuke);
-      vozilo.setVrijemeSljedeceDostave(vrijemeSljedeceDostave);
-
-      iterator.remove();
+    if (strategijaIsporuke != null) {
+      strategijaIsporuke.isporuciPakete(vozilo, gps);
     }
+  }
 
-    if (paketiZaIsporuku.isEmpty()) {
-      ukrcaniPaketi.remove(vozilo);
-    }
+  public void postaviStrategijuIsporuke(StrategijaIsporuke strategija) {
+    this.strategijaIsporuke = strategija;
   }
 
   public void preuzmiPodatkeOProstoru(List<Podrucje> podrucja, List<Mjesto> mjesta,
