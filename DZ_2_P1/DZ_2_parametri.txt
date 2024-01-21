@@ -12,4 +12,4 @@ ms=600
 pr=07:00
 kr=19:00
 gps= 46.305433, 16.336646
-isporuka=2
+isporuka=1

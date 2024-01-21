@@ -14,6 +14,7 @@ import org.foi.uzdiz.pmatisic.zadaca_3.singleton.Tvrtka;
 public class Redoslijed implements StrategijaIsporuke {
 
   private UredZaDostavu uredZaDostavu;
+  private String trenutniGPS = null;
 
   public Redoslijed(UredZaDostavu uredZaDostavu) {
     this.uredZaDostavu = uredZaDostavu;
@@ -34,7 +35,10 @@ public class Redoslijed implements StrategijaIsporuke {
         "\nU " + uredZaDostavu.trenutnoVirtualnoVrijeme.format(uredZaDostavu.dateTimeFormatter)
             + " dostava je pokrenuta za vozilo " + vozilo.getRegistracija() + ".\n");
 
-    String trenutniGPS = gps;
+    if (trenutniGPS == null) {
+      trenutniGPS = gps;
+    }
+
     Iterator<Paket> iterator = paketiZaIsporuku.iterator();
     while (iterator.hasNext()) {
       Paket paket = iterator.next();
@@ -55,8 +59,8 @@ public class Redoslijed implements StrategijaIsporuke {
       }
 
       String gpsPaketa = izracunajGPSAdresePaketa(ulica, primatelj.getKucniBroj());
-      vrijemeSljedeceDostave =
-          izracunajVrijemeDostave(trenutniGPS, gpsPaketa, vozilo.getProsjecnaBrzina());
+      var udaljenost = izracunajUdaljenost(trenutniGPS, gpsPaketa);
+      // System.out.println(udaljenost);
       trenutniGPS = gpsPaketa;
 
       System.out.printf("U %s paket %s isporučen primatelju %s pomoću vozila %s.%n",
@@ -88,13 +92,6 @@ public class Redoslijed implements StrategijaIsporuke {
 
   private double interpoliraj(double pocetak, double kraj, double postotak) {
     return pocetak + (kraj - pocetak) * postotak;
-  }
-
-  private LocalDateTime izracunajVrijemeDostave(String startGPS, String ciljniGPS, double brzina) {
-    double udaljenost = izracunajUdaljenost(startGPS, ciljniGPS);
-    double vrijemeUSatima = udaljenost / brzina;
-    int vrijemeUMinutama = (int) (vrijemeUSatima * 60);
-    return uredZaDostavu.trenutnoVirtualnoVrijeme.plusMinutes(vrijemeUMinutama);
   }
 
   private double izracunajUdaljenost(String startGPS, String ciljniGPS) {
