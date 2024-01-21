@@ -10,6 +10,13 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.foi.uzdiz.pmatisic.zadaca_3.builder.Paket;
+import org.foi.uzdiz.pmatisic.zadaca_3.chain.Handler;
+import org.foi.uzdiz.pmatisic.zadaca_3.chain.IPHandler;
+import org.foi.uzdiz.pmatisic.zadaca_3.chain.POHandler;
+import org.foi.uzdiz.pmatisic.zadaca_3.chain.PPHandler;
+import org.foi.uzdiz.pmatisic.zadaca_3.chain.PSHandler;
+import org.foi.uzdiz.pmatisic.zadaca_3.chain.QHandler;
+import org.foi.uzdiz.pmatisic.zadaca_3.chain.VRHandler;
 import org.foi.uzdiz.pmatisic.zadaca_3.factory.DatotekaFactory;
 import org.foi.uzdiz.pmatisic.zadaca_3.factory.MjestoDatoteka;
 import org.foi.uzdiz.pmatisic.zadaca_3.factory.OsobaDatoteka;
@@ -34,8 +41,8 @@ public class Tvrtka {
 
   private static volatile Tvrtka instance;
   private static Map<String, String> podatci = new HashMap<>();
-  private UredZaPrijem uredZaPrijem;
-  private UredZaDostavu uredZaDostavu;
+  public UredZaPrijem uredZaPrijem;
+  public UredZaDostavu uredZaDostavu;
   private ServisObavijesti servisObavijesti;
   private Object citacVrstaPaketa = new VrstaPaketaDatoteka();
   private Object citacVozila = new VoziloDatoteka();
@@ -118,27 +125,26 @@ public class Tvrtka {
   }
 
   public void interakcija() {
+    Handler ipHandler = new IPHandler();
+    Handler poHandler = new POHandler();
+    Handler ppHandler = new PPHandler();
+    Handler psHandler = new PSHandler();
+    Handler qHandler = new QHandler();
+    Handler vrHandler = new VRHandler();
+
+    ipHandler.setNextHandler(poHandler).setNextHandler(ppHandler).setNextHandler(psHandler)
+        .setNextHandler(qHandler).setNextHandler(vrHandler);
+
     Scanner scanner = new Scanner(System.in);
     String unos;
+    boolean continueLoop = true;
+
     do {
       System.out.println("Unesite komandu:");
       unos = scanner.nextLine().trim();
-      if (unos.startsWith("IP")) {
-        uredZaPrijem.ispisTablicePrimljenihPaketa();
-      } else if (unos.startsWith("VR")) {
-        izvrsiVirtualnoVrijeme(unos);
-      } else if (unos.startsWith("PP")) {
-        uredZaDostavu.ispisiTablicu();
-      } else if (unos.startsWith("PS")) {
-        promijeniStanjeVozila(unos);
-      } else if (unos.startsWith("PO")) {
-        promijeniStatusObavijesti(unos);
-      } else if (unos.equals("Q")) {
-        System.out.println("Izlazak iz programa.");
-      } else {
-        System.out.println("Pogrešan unos!");
-      }
-    } while (!unos.equals("Q"));
+      continueLoop = ipHandler.handle(unos);
+    } while (continueLoop);
+
     scanner.close();
   }
 
@@ -185,7 +191,7 @@ public class Tvrtka {
     uredZaDostavu.dohvatiOsobe(osobe);
   }
 
-  private void izvrsiVirtualnoVrijeme(String unos) {
+  public void izvrsiVirtualnoVrijeme(String unos) {
     int brojSati = Integer.parseInt(unos.split(" ")[1]);
     LocalDateTime krajIzvrsavanja = virtualnoVrijeme.plusHours(brojSati);
 
@@ -241,7 +247,7 @@ public class Tvrtka {
     uredZaDostavu.ukrcajPaket();
   }
 
-  private void promijeniStatusObavijesti(String unos) {
+  public void promijeniStatusObavijesti(String unos) {
     Pattern pattern =
         Pattern.compile("PO\\s+'\\s*([\\p{L} .'-]+?)\\s*'\\s+([\\p{L}\\p{N}]+)\\s+(D|N)");
     Matcher matcher = pattern.matcher(unos);
@@ -264,7 +270,7 @@ public class Tvrtka {
     }
   }
 
-  private void promijeniStanjeVozila(String unos) {
+  public void promijeniStanjeVozila(String unos) {
     Pattern pattern = Pattern.compile("PS\\s+([A-Z0-9ČŽŠĆĐ]+)\\s+(A|NI|NA)");
     Matcher matcher = pattern.matcher(unos);
 
