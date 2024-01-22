@@ -57,8 +57,8 @@ public class Redoslijed implements StrategijaIsporuke {
         continue;
 
       String gpsPaketa = izracunajGPSAdresePaketa(ulica, primatelj.getKucniBroj());
-      @SuppressWarnings("unused")
       var udaljenost = izracunajUdaljenost(trenutniGPS, gpsPaketa);
+      vozilo.dodajOdvozeneKilometre(udaljenost);
       trenutniGPS = gpsPaketa;
 
       System.out.printf("U %s paket %s isporučen primatelju %s pomoću vozila %s.%n",
@@ -68,6 +68,7 @@ public class Redoslijed implements StrategijaIsporuke {
       UredZaDostavu.vrijemePreuzimanjaPaketa.put(paket.getOznaka(), vrijemeSljedeceDostave);
       UredZaDostavu.statusPaketa.put(paket.getOznaka(), "Dostavljeno");
       uredZaDostavu.isporuceniPaketi.put(paket.getOznaka(), true);
+      vozilo.povecajBrojIsporucenihPaketa();
       vozilo.setSlobodno(true);
 
       vrijemeSljedeceDostave = vrijemeSljedeceDostave.plusMinutes(uredZaDostavu.vrijemeIsporuke);

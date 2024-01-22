@@ -6,6 +6,7 @@ import org.foi.uzdiz.pmatisic.zadaca_3.state.AktivnoStanjeVozila;
 import org.foi.uzdiz.pmatisic.zadaca_3.state.NeaktivnoStanjeVozila;
 import org.foi.uzdiz.pmatisic.zadaca_3.state.NeispravnoStanjeVozila;
 import org.foi.uzdiz.pmatisic.zadaca_3.state.StanjeVozila;
+import org.foi.uzdiz.pmatisic.zadaca_3.visitor.Visitor;
 
 public class Vozilo {
 
@@ -20,6 +21,11 @@ public class Vozilo {
   private LocalDateTime vrijemeSljedeceDostave = null;
   private boolean slobodno = true;
   private StanjeVozila trenutnoStanje;
+  private double ukupnoOdvozenihKm = 0;
+  private int brojHitnihPaketa = 0;
+  private int brojObicnihPaketa = 0;
+  private int brojIsporucenihPaketa = 0;
+  private int brojVoznji = 0;
 
   public Vozilo(String registracija, String opis, double kapacitetTezine, double kapacitetProstora,
       int redoslijed, double prosjecnaBrzina, String podrucjaPoRangu, StatusVozila status) {
@@ -68,6 +74,30 @@ public class Vozilo {
 
   public LocalDateTime getVrijemeSljedeceDostave() {
     return vrijemeSljedeceDostave;
+  }
+
+  public StanjeVozila getTrenutnoStanje() {
+    return this.trenutnoStanje;
+  }
+
+  public double getUkupnoOdvozenihKm() {
+    return ukupnoOdvozenihKm;
+  }
+
+  public int getBrojHitnihPaketa() {
+    return brojHitnihPaketa;
+  }
+
+  public int getBrojObicnihPaketa() {
+    return brojObicnihPaketa;
+  }
+
+  public int getBrojIsporucenihPaketa() {
+    return brojIsporucenihPaketa;
+  }
+
+  public int getBrojVoznji() {
+    return brojVoznji;
   }
 
   public boolean jeSlobodno() {
@@ -136,8 +166,28 @@ public class Vozilo {
     this.trenutnoStanje = novoStanje;
   }
 
-  public StanjeVozila getTrenutnoStanje() {
-    return this.trenutnoStanje;
+  public void dodajOdvozeneKilometre(double km) {
+    this.ukupnoOdvozenihKm += km;
+  }
+
+  public void povecajBrojPaketa(Paket paket) {
+    if (paket.getUslugaDostave() == UslugaDostave.H) {
+      brojHitnihPaketa++;
+    } else {
+      brojObicnihPaketa++;
+    }
+  }
+
+  public void povecajBrojIsporucenihPaketa() {
+    this.brojIsporucenihPaketa++;
+  }
+
+  public void povecajBrojVoznji() {
+    this.brojVoznji++;
+  }
+
+  public void accept(Visitor visitor) {
+    visitor.visitVozilo(this);
   }
 
 }

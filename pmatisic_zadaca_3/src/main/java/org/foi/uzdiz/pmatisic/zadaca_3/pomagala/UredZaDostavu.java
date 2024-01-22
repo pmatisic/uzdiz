@@ -36,7 +36,7 @@ public class UredZaDostavu {
   private Queue<Paket> paketiZaDostavu = new LinkedList<>();
   public Map<Vozilo, List<Paket>> ukrcaniPaketi = new HashMap<>();
   public Map<String, Boolean> isporuceniPaketi = new HashMap<>();
-  private List<Vozilo> vozila = new LinkedList<>();
+  public List<Vozilo> vozila = new LinkedList<>();
   private Map<Vozilo, Double> tezinaVozila = new HashMap<>();
   private Map<Vozilo, Double> volumenVozila = new HashMap<>();
   private Map<Integer, Mjesto> mjestoMap = new HashMap<>();
@@ -192,6 +192,7 @@ public class UredZaDostavu {
         }
 
         ukrcaniPaketi.computeIfAbsent(vozilo, k -> new ArrayList<>()).add(paket);
+        vozilo.povecajBrojPaketa(paket);
         statusPaketa.put(paket.getOznaka(), "Ukrcano");
 
         System.out.printf("Paket %s je ukrcan na %s.%n", paket.getOznaka(),
@@ -203,6 +204,7 @@ public class UredZaDostavu {
 
       if (!ukrcaniPaketi.getOrDefault(vozilo, new ArrayList<>()).isEmpty()) {
         vozilo.setSlobodno(false);
+        vozilo.povecajBrojVoznji();
         isporuciPaket(vozilo);
         podrucjeVozila = null;
       }

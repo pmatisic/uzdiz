@@ -60,6 +60,7 @@ public class Udaljenost implements StrategijaIsporuke {
 
         String gpsPaketa = izracunajGPSAdresePaketa(ulica, primatelj.getKucniBroj());
         double udaljenost = izracunajUdaljenost(trenutniGPS, gpsPaketa);
+        vozilo.dodajOdvozeneKilometre(udaljenost);
 
         if (udaljenost < najmanjaUdaljenost) {
           najmanjaUdaljenost = udaljenost;
@@ -80,6 +81,7 @@ public class Udaljenost implements StrategijaIsporuke {
             vrijemeSljedeceDostave);
         UredZaDostavu.statusPaketa.put(najbliziPaket.getOznaka(), "Dostavljeno");
         uredZaDostavu.isporuceniPaketi.put(najbliziPaket.getOznaka(), true);
+        vozilo.povecajBrojIsporucenihPaketa();
         vozilo.setSlobodno(true);
         vrijemeSljedeceDostave = vrijemeSljedeceDostave.plusMinutes(uredZaDostavu.vrijemeIsporuke);
         vozilo.setVrijemeSljedeceDostave(vrijemeSljedeceDostave);

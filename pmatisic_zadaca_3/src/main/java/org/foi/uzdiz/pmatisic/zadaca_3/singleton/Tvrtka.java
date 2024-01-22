@@ -16,6 +16,7 @@ import org.foi.uzdiz.pmatisic.zadaca_3.chain.POHandler;
 import org.foi.uzdiz.pmatisic.zadaca_3.chain.PPHandler;
 import org.foi.uzdiz.pmatisic.zadaca_3.chain.PSHandler;
 import org.foi.uzdiz.pmatisic.zadaca_3.chain.QHandler;
+import org.foi.uzdiz.pmatisic.zadaca_3.chain.SVHandler;
 import org.foi.uzdiz.pmatisic.zadaca_3.chain.VRHandler;
 import org.foi.uzdiz.pmatisic.zadaca_3.factory.DatotekaFactory;
 import org.foi.uzdiz.pmatisic.zadaca_3.factory.MjestoDatoteka;
@@ -130,10 +131,11 @@ public class Tvrtka {
     Handler ppHandler = new PPHandler();
     Handler psHandler = new PSHandler();
     Handler qHandler = new QHandler();
+    Handler svHandler = new SVHandler();
     Handler vrHandler = new VRHandler();
 
     ipHandler.setNextHandler(poHandler).setNextHandler(ppHandler).setNextHandler(psHandler)
-        .setNextHandler(qHandler).setNextHandler(vrHandler);
+        .setNextHandler(qHandler).setNextHandler(svHandler).setNextHandler(vrHandler);
 
     Scanner scanner = new Scanner(System.in);
     String unos;
