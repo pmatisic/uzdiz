@@ -18,7 +18,7 @@ public class IPProsireniDecorator extends IPBazniDecorator {
 
   private void dodajFinancijskuAnalizu() {
     double ukupanIznosDostave = 0.0;
-    double ukupanIznosPouzeca = 0.0;
+    double ukupanIznosPoduzeca = 0.0;
     int brojDostavljenihPaketa = 0;
 
     for (Paket paket : Tvrtka.getInstance().uredZaPrijem.zaprimljeniPaketi) {
@@ -26,22 +26,23 @@ public class IPProsireniDecorator extends IPBazniDecorator {
           .equals("Dostavljeno")) {
         ukupanIznosDostave +=
             Tvrtka.getInstance().uredZaPrijem.mapaCijenaDostave.getOrDefault(paket, 0.0);
-        ukupanIznosPouzeca += paket.getIznosPouzeca();
+        ukupanIznosPoduzeca += paket.getIznosPouzeca();
         brojDostavljenihPaketa++;
       }
     }
 
     double prosjekIznosaPoPaketu = (brojDostavljenihPaketa > 0)
-        ? (ukupanIznosDostave + ukupanIznosPouzeca) / brojDostavljenihPaketa
+        ? (ukupanIznosDostave + ukupanIznosPoduzeca) / brojDostavljenihPaketa
         : 0;
 
     String prihodi = String.format("\u001B[32mUkupni prihodi: %.2f\u001B[0m", ukupanIznosDostave);
-    String pouzeca = String.format("\u001B[32mUkupna pouzeća: %.2f\u001B[0m", ukupanIznosPouzeca);
+    String poduzeca =
+        String.format("\u001B[32mUkupni iznos za poduzeća: %.2f\u001B[0m", ukupanIznosPoduzeca);
     String prosjek =
         String.format("\u001B[32mProsjek po paketu: %.2f\u001B[0m", prosjekIznosaPoPaketu);
 
     System.out.println(prihodi);
-    System.out.println(pouzeca);
+    System.out.println(poduzeca);
     System.out.println(prosjek);
   }
 

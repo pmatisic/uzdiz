@@ -8,13 +8,13 @@ import org.foi.uzdiz.pmatisic.zadaca_3.model.Mjesto;
 import org.foi.uzdiz.pmatisic.zadaca_3.model.Ulica;
 
 public class CompositeProstor implements Prostor {
+
   private int id;
   private final List<Prostor> prostori;
 
   public CompositeProstor(int id) {
     this.id = id;
     this.prostori = new ArrayList<>();
-
   }
 
   @Override
@@ -77,4 +77,5 @@ public class CompositeProstor implements Prostor {
     }
     return null;
   }
+
 }
