@@ -1,7 +1,6 @@
 package org.foi.uzdiz.pmatisic.zadaca_3.pomagala;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,9 +14,9 @@ import org.foi.uzdiz.pmatisic.zadaca_3.model.VrstaPaketa;
 public class UredZaPrijem {
 
   private Map<String, VrstaPaketa> mapaVrstaPaketa = new HashMap<>();
-  private Map<Paket, Double> mapaCijenaDostave = new HashMap<>();
+  public Map<Paket, Double> mapaCijenaDostave = new HashMap<>();
   private List<Paket> primljeniPaketi = new ArrayList<>();
-  private List<Paket> zaprimljeniPaketi = new ArrayList<>();
+  public List<Paket> zaprimljeniPaketi = new ArrayList<>();
   private LocalDateTime trenutnoVirtualnoVrijeme;
   private int maxTezina;
 
@@ -101,34 +100,6 @@ public class UredZaPrijem {
       filtriraniPaketi.add(paket);
     }
     return filtriraniPaketi;
-  }
-
-  public void ispisTablicePrimljenihPaketa() {
-    System.out.println(
-        "+-----------+----------------------+----------------------+----------------------+----------------------+---------------------------+----------------------+----------------------+");
-    System.out.println(
-        "|   Oznaka  |   Vrijeme prijema    |   Vrsta paketa       |   Vrsta usluge       |   Status isporuke    |   Vrijeme preuzimanja     |     Iznos dostave    |     Iznos poduzeća   |");
-    System.out.println(
-        "+-----------+----------------------+----------------------+----------------------+----------------------+---------------------------+----------------------+----------------------+");
-
-    for (Paket paket : zaprimljeniPaketi) {
-      DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm:ss");
-      String statusIsporuke =
-          UredZaDostavu.statusPaketa.getOrDefault(paket.getOznaka(), "Na čekanju");
-      String vrijemePreuzimanja = "-";
-      if (statusIsporuke.equals("Dostavljeno")
-          && UredZaDostavu.vrijemePreuzimanjaPaketa.containsKey(paket.getOznaka())) {
-        vrijemePreuzimanja =
-            UredZaDostavu.vrijemePreuzimanjaPaketa.get(paket.getOznaka()).format(dateTimeFormatter);
-      }
-      Double iznosDostave = mapaCijenaDostave.getOrDefault(paket, 0.0);
-      System.out.printf("| %-6s | %-20s | %-20s | %-20s | %-20s | %-25s | %20.2f | %20.2f |\n",
-          paket.getOznaka(), paket.getVrijemePrijema().format(dateTimeFormatter),
-          paket.getVrstaPaketa(), paket.getUslugaDostave(), statusIsporuke, vrijemePreuzimanja,
-          iznosDostave, paket.getIznosPouzeca());
-    }
-    System.out.println(
-        "+-----------+----------------------+----------------------+----------------------+----------------------+---------------------------+----------------------+----------------------+");
   }
 
 }
