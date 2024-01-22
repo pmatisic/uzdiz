@@ -13,11 +13,12 @@ public class IspisVisitor implements Visitor {
     double postotakZauzecaTezine =
         (Tvrtka.getInstance().uredZaDostavu.dohvatiTrenutnuTezinuVozila(vozilo)
             / vozilo.getKapacitetTezine()) * 100;
+    String opisStanja = vozilo.dohvatiOpisStanja();
 
     System.out.printf(
         "| %-15s | %-30s | %-12s | %-14.2f | %-12d | %-13d | %-17d | %-13.2f | %-12.2f | %-10d |\n",
-        vozilo.getRegistracija(), vozilo.getOpis(), vozilo.getStatus().toString(),
-        vozilo.getUkupnoOdvozenihKm(), vozilo.getBrojHitnihPaketa(), vozilo.getBrojObicnihPaketa(),
+        vozilo.getRegistracija(), vozilo.getOpis(), opisStanja, vozilo.getUkupnoOdvozenihKm(),
+        vozilo.getBrojHitnihPaketa(), vozilo.getBrojObicnihPaketa(),
         vozilo.getBrojIsporucenihPaketa(), postotakZauzecaProstora, postotakZauzecaTezine,
         vozilo.getBrojVoznji());
   }

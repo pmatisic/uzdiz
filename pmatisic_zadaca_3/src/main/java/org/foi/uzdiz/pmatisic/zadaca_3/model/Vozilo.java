@@ -158,6 +158,17 @@ public class Vozilo {
     }
   }
 
+  public String dohvatiOpisStanja() {
+    if (trenutnoStanje instanceof AktivnoStanjeVozila) {
+      return "Aktivno";
+    } else if (trenutnoStanje instanceof NeaktivnoStanjeVozila) {
+      return "Neaktivno";
+    } else if (trenutnoStanje instanceof NeispravnoStanjeVozila) {
+      return "Neispravno";
+    }
+    return "Nepoznato";
+  }
+
   public boolean ukrcajPaket(Paket paket) {
     return this.trenutnoStanje.ukrcajPaket(this, paket);
   }
